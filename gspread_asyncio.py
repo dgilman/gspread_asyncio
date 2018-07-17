@@ -33,6 +33,8 @@ from gspread import Cell
 # Chain up the class hierarchy and replace everything when things get timed out?
 # To implement: always reauth, even in far child methods. Have everything store its current auth time as an attribute.
 # Compare auth times against your parent's auth time after reauthing, if they differ, throw away your cache and re-query.
+# Add timeouts/cancellation args to everything
+# Don't declare everything one-by-one, implement a __ method instead
 
 # Usage:
 # see bottom, but the tl;dr is:
