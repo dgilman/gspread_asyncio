@@ -7,6 +7,9 @@ import gspread
 from gspread.utils import extract_id_from_url, a1_to_rowcol
 from gspread import Cell
 
+# Copyright 2018 David Gilman
+# Licensed under the MIT license. See LICENSE for details.
+
 # Things this does:
 # asyncio coroutine API (underlying gspread calls are run in the default threadpool executor)
 # caching of gspread client/spreadsheet/worksheet objects
@@ -20,21 +23,6 @@ from gspread import Cell
 # Methods that don't return any value have an optional 'nowait' kwarg
 # that schedules the coroutine for later execution on the event loop
 # and returns control to your caller immediately.
-
-# Not Implemented:
-# docs/docstrings
-# something to handle retries in the call()
-# repr() methods
-# tests
-# Some nice operational stuff on exposing the number of waiters on the writer lock,
-# and some way to cleanly shut down the cached cell update writer
-# (the docs on run_forever suggest that the current impl is stop() safe but im not really sure)
-# Use loop.time() instead of utcnow()
-# Chain up the class hierarchy and replace everything when things get timed out?
-# To implement: always reauth, even in far child methods. Have everything store its current auth time as an attribute.
-# Compare auth times against your parent's auth time after reauthing, if they differ, throw away your cache and re-query.
-# Add timeouts/cancellation args to everything
-# Don't declare everything one-by-one, implement a __ method instead
 
 # Usage:
 # see bottom, but the tl;dr is:
@@ -76,6 +64,7 @@ class AsyncioGspreadClientManager(object):
       self.cell_flush_delay = cell_flush_delay
       # minutes
       self.reauth_interval = reauth_interval
+      self.reauth_delta = datetime.timedelta(minutes=reauth_interval)
 
       self.agc_cache = {}
       self.auth_time = None
@@ -95,8 +84,14 @@ class AsyncioGspreadClientManager(object):
             await self._before_gspread_call(method, args, kwargs)
             rval = await self.loop.run_in_executor(None, fn)
             return rval
-         # APIError gets thrown for transport-type errors (like HTTP 500s)
          except gspread.exceptions.APIError as e:
+            code = e.response.status_code
+            # https://cloud.google.com/apis/design/errors
+            # HTTP 400 range codes are errors that the caller should handle.
+            # 429, however, is the rate limiting.
+            # Catch it here, because we have handling and want to retry that one anyway.
+            if (code >= 400 or code <= 499) and code != 429:
+               raise
             await self._handle_gspread_error(e, method, args, kwargs)
          finally:
             self.call_lock.release()
@@ -137,8 +132,7 @@ class AsyncioGspreadClientManager(object):
 
    async def _authorize(self):
       now = datetime.datetime.utcnow()
-      reauth_delta = datetime.timedelta(minutes=self.reauth_interval)
-      if self.auth_time == None or self.auth_time + reauth_delta < now:
+      if self.auth_time == None or self.auth_time + self.reauth_delta < now:
          creds = await self.loop.run_in_executor(None, self.credentials_fn)
          gc = await self.loop.run_in_executor(None, gspread.authorize, creds)
          agc = AsyncioGspreadClient(self, gc)
@@ -228,7 +222,7 @@ class AsyncioGspreadClient(object):
          return self.ss_cache_key[key]
       ss = await self.agcm._call(self.gc.open_by_key, key)
       ass = AsyncioGspreadSpreadsheet(self.agcm, ss)
-      self.ss_cache_title[ss.title] = ass
+      self.ss_cache_title[await ass.get_title()] = ass
       self.ss_cache_key[key] = ass
       return ass
 
@@ -241,7 +235,7 @@ class AsyncioGspreadClient(object):
       asses = []
       for ss in sses:
          ass = AsyncioGspreadSpreadsheet(self.agcm, ss)
-         self.ss_cache_title[ss.title] = ass
+         self.ss_cache_title[await ass.get_title()] = ass
          self.ss_cache_key[ss.id] = ass
          asses.append(ass)
       return asses
@@ -304,7 +298,10 @@ class AsyncioGspreadSpreadsheet(object):
 
    @property
    def title(self):
-      return self.ss.title
+      raise NotImplemented('This does network i/o. Please use the async get_title() function instead.')
+
+   async def get_title(self):
+      return await self.agcm._call(getattr, self.ss, 'title')
 
    async def worksheet(self, title):
       if title in self.ws_cache_title:
