@@ -90,7 +90,7 @@ class AsyncioGspreadClientManager(object):
             # HTTP 400 range codes are errors that the caller should handle.
             # 429, however, is the rate limiting.
             # Catch it here, because we have handling and want to retry that one anyway.
-            if (code >= 400 or code <= 499) and code != 429:
+            if code >= 400 and code <= 499 and code != 429:
                raise
             await self._handle_gspread_error(e, method, args, kwargs)
          finally:
