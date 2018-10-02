@@ -6,6 +6,7 @@ import logging
 import gspread
 from gspread.utils import extract_id_from_url, a1_to_rowcol
 from gspread import Cell
+import requests
 
 # Copyright 2018 David Gilman
 # Licensed under the MIT license. See LICENSE for details.
@@ -93,6 +94,8 @@ class AsyncioGspreadClientManager(object):
             if code >= 400 and code <= 499 and code != 429:
                raise
             await self._handle_gspread_error(e, method, args, kwargs)
+         except requests.RequestException as e:
+            await self._handle_requests_error(e, method, args, kwargs)
          finally:
             self.call_lock.release()
 
@@ -104,6 +107,12 @@ class AsyncioGspreadClientManager(object):
       # By default, retry forever because sometimes Google just poops out and gives us a 500.
       # Subclass this to get custom error handling, backoff, jitter,
       # maybe even some cancellation
+      self.l.exception("Error while calling {0} {1} {2}".format(method.__name__, str(args), str(kwargs)))
+      # Wait a little bit just to keep from pounding Google
+      await asyncio.sleep(self.gspread_delay)
+
+   async def _handle_requests_error(self, e, method, args, kwargs):
+      # By default, retry forever.
       self.l.exception("Error while calling {0} {1} {2}".format(method.__name__, str(args), str(kwargs)))
       # Wait a little bit just to keep from pounding Google
       await asyncio.sleep(self.gspread_delay)
