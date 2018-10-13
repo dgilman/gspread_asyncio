@@ -11,27 +11,6 @@ import requests
 # Copyright 2018 David Gilman
 # Licensed under the MIT license. See LICENSE for details.
 
-# Things this does:
-# asyncio coroutine API (underlying gspread calls are run in the default threadpool executor)
-# caching of gspread client/spreadsheet/worksheet objects
-# automatic reauthorization (creds expire after 1 hr)
-# automatic retries of failed request (spurious 500s from google)
-# throttling of API calls to not go over api limits (1 call per sec)
-# caching on the update_cell method to have it batch and flush updates
-
-# By default when you await on a method in this library
-# your caller will pause until the method finishes.
-# Methods that don't return any value have an optional 'nowait' kwarg
-# that schedules the coroutine for later execution on the event loop
-# and returns control to your caller immediately.
-
-# Usage:
-# see bottom, but the tl;dr is:
-# create a AsyncioGspreadClientManager
-# when you need to do stuff with your spreadsheet, call AsyncioGspreadClientManager.authorize() to get a gspread client
-# don't keep this client/its children around for more than an hour, but you can keep them around for a bit
-# you can call authorize() (and other stuff like get_worksheet) often as their results are cached
-
 # Methods decorated with nowait take an optional kwarg, 'nowait'
 # If it is true, the method call gets scheduled on the event loop and
 # returns a task.
@@ -445,35 +424,3 @@ class AsyncioGspreadWorksheet(object):
 
    async def update_title(self, title):
       raise NotImplemented("This breaks ws caching, could be implemented later")
-
-async def run(agcm):
-   gc = await agcm.authorize()
-   ss = await gc.create('Test Spreadsheet')
-   print('Spreadsheet URL: https://docs.google.com/spreadsheets/d/{0}'.format(ss.id))
-   await gc.insert_permission(ss.id, None, perm_type='anyone', role='writer')
-
-   ws = await ss.add_worksheet('My Test Worksheet', 10, 5)
-   zero_ws = await ss.get_worksheet(0)
-
-   for row in range(1,11):
-      for col in range(1,6):
-         val = '{0}/{1}'.format(row, col)
-         await ws.update_cell(row, col, val+" ws")
-         await zero_ws.update_cell(row, col, val+" zero ws")
-
-   await asyncio.sleep(30)
-   agcm.loop.stop()
-
-if __name__ == "__main__":
-   from oauth2client.service_account import ServiceAccountCredentials
-
-   def get_creds():
-      return ServiceAccountCredentials.from_json_keyfile_name('serviceacct_spreadsheet.json',
-         ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive',
-         'https://www.googleapis.com/auth/spreadsheets'])
-   agcm = AsyncioGspreadClientManager(get_creds)
-
-   loop = asyncio.get_event_loop()
-   loop.set_debug(True)
-   loop.create_task(run(agcm))
-   loop.run_forever()
