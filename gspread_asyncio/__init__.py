@@ -142,17 +142,16 @@ class AsyncioGspreadClientManager(object):
       The default implementation figures out the delta between the last Google API call and now and sleeps for the delta if it is less than :attr:`gspread_delay`.
       """
       # Subclass this to customize rate limiting
-      now = datetime.datetime.utcnow()
+      now = self._loop.time()
       if self.last_call == None:
          self.last_call = now
          return
       delta = (now - self.last_call)
-      if delta.total_seconds() >= self.gspread_delay:
+      if delta >= self.gspread_delay:
          self.last_call = now
          return
-      delay_sec = float(delta.microseconds) / 10**6
-      await asyncio.sleep(self.gspread_delay - delay_sec, loop=self._loop)
-      self.last_call = datetime.datetime.utcnow()
+      await asyncio.sleep(self.gspread_delay - delta, loop=self._loop)
+      self.last_call = self._loop.time()
       return
 
    async def authorize(self):
