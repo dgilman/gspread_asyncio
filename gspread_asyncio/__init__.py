@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import functools
 import logging
 
@@ -47,9 +46,8 @@ class AsyncioGspreadClientManager(object):
       # seconds
       self.gspread_delay = gspread_delay
       self.cell_flush_delay = cell_flush_delay
-      # minutes
-      self.reauth_interval = reauth_interval
-      self._reauth_delta = datetime.timedelta(minutes=reauth_interval)
+      # arg is minutes, the stored value is seconds
+      self.reauth_interval = reauth_interval * 60
 
       self._agc_cache = {}
       self.auth_time = None
@@ -168,8 +166,8 @@ class AsyncioGspreadClientManager(object):
          self.auth_lock.release()
 
    async def _authorize(self):
-      now = datetime.datetime.utcnow()
-      if self.auth_time == None or self.auth_time + self._reauth_delta < now:
+      now = self._loop.time()
+      if self.auth_time == None or self.auth_time + self.reauth_interval < now:
          creds = await self._loop.run_in_executor(None, self.credentials_fn)
          gc = await self._loop.run_in_executor(None, gspread.authorize, creds)
          agc = AsyncioGspreadClient(self, gc)
