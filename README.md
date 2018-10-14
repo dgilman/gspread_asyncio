@@ -47,7 +47,7 @@ def get_creds():
       ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive',
       'https://www.googleapis.com/auth/spreadsheets'])
 
-agcm = AsyncioGspreadClientManager(get_creds)
+agcm = gspread_asyncio.AsyncioGspreadClientManager(get_creds)
 loop = asyncio.get_event_loop()
 loop.set_debug(True)
 loop.create_task(run(agcm))
