@@ -11,3 +11,16 @@ install:
 
 script:
   - make travis-script
+
+jobs:
+  include:
+    - stage: deploy
+      python: "3.6"
+      provider: pypi
+      distributions: "sdist bdist_wheel"
+      user:
+        - secure: "InggVCrhMk2RfOOwvsLWW1zZwi69AP7z7LNGwSgbIMuyoeZFRwSeqiD7o4SMG03OL0cthWIyVVoI9tCx/z47mHPf1TDlWftjXjJ38myIpbhVudS9JvbteofkRbKuQqYggb31DLVaUhY4f4FsOhCujcCOWNh37CuU4jq+zSziBKdQ4ofa2tdmdvV2VjABkw1NzzumA0aIwpgDuDq2YnedcHuAn0Gap1m6lsJvSW+U7oxPD04t1YKjAmAOyn22X3qHggCmyiZ/aF/DjvGbPrxq2YDYkUoEPpBj3r1CkmaeiHuxCfU3KZCg7SyDs7YcTQ0WqbeREBFusZhB7hy9c2hc2LQ38p/tsmM7sSIReUYvYf1MRH4HCsgSz8jUKyEgDOD0qEFV08yCeIVVblFrFAtHoqLsm29XY+haUJ7a5h7SzXKWP7EJOmMp6McwVkwwc6U14Bp3s4uCXgddCLrI6Ne50p2ixztU0zc3buBXLfK9C4osgvhFXnatT7bsuPlLqz1CPNsQ0IkVCRmHAC0VQe98/1odhUqtEw+N+dSN+iBlxWjLF89yZI1PIXqStOOteqD1pxkHyWDahRM2JROf5V2VkUHTdu0vW8VPRCwBt8HecYkePBjzVpYWoODIhj/c1fSVAbaRhXieniSk6cKjW1la9EgQiaMg9q3lsDL8A+uCPBE="
+      password:
+        - secure: "tNh1/Dc8VRmKz+WI1pLVWxVfp9ZfBhSqDaI4HMuKrJmvylmOnjcGuEwaaAAhKCgEcEe+/PMZ8zjj/VvVAe/GlsggsnlNNA24U51yyQ4BVEWW584emV92ORK+JDr9TUpW4ajfLm725xLocJGIZQlqTHP9DWGNugkvtiIjLBoThA7RWgMIEGPeDDHYr26kFrH5HL3Ua8szLw1qrCv9jIkEEnvNoENGRk0Vd+9HUd7ktrOPOqmcUpFNvHbdmKEpbmq6oLsVgtLAVPHT1g3UpcuZ2Ykg1LK4eQ2q1dziWVK3kEsdNm9JOOex9twgLPhIxGuS/AyrROZxE97cy7UfB4ROoDxqPYnsE5iC1qCFjCk+GJ9bCAD9QdJUrg3RQKXucbcDZsx+Dh8WODXYpwZ7kpLXvSwqgfQg/+8UUrlBvgCj6NrSPd+1SW6K3Ur2paJV5scJVnN6tlBZyC/HbGF4NvHo9p9M0CfZRU6Nq5tKR14F88ySV1jIqZ2uUHjG44nilbJoNOC65tN3lrFNQAyTDK+rbRdeUo96xq+h1Js3KgBUBmLo6cxPwXsizWtyQGmXAey28l5vTJ/Fb/mlmq0NzMscg/0jHy5js6CgJ2jLCM207+hlmp1+1ueaNHLtDVNaNVgqoJ8UsB0kWf81Cy6ObBr3OS7v2+FwFEaMRJ6kAgRAfk4"
+      on:
+        tags: true
