@@ -4,6 +4,8 @@ An [asyncio wrapper](https://docs.python.org/3/library/asyncio.html) for [burnas
 
 Requires Python >= 3.5 because of its use of async/await syntax.
 
+[![Documentation Status](https://readthedocs.org/projects/gspread-asyncio/badge/?version=latest)](https://gspread-asyncio.readthedocs.io/en/latest/?badge=latest)
+
 ## Features
 
 * Complete async wrapping of the `gspread` API. All `gspread` API calls are run off the main thread in a threadpool executor.
