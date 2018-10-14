@@ -4,7 +4,7 @@ An [asyncio wrapper](https://docs.python.org/3/library/asyncio.html) for [burnas
 
 Requires Python >= 3.5 because of its use of async/await syntax.
 
-[![Documentation Status](https://readthedocs.org/projects/gspread-asyncio/badge/?version=latest)](https://gspread-asyncio.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/gspread-asyncio/badge/?version=latest)](https://gspread-asyncio.readthedocs.io/en/latest/?badge=latest) [![Build Status](https://travis-ci.org/dgilman/gspread_asyncio.svg?branch=master)](https://travis-ci.org/dgilman/gspread_asyncio)
 
 ## Features
 
