@@ -54,11 +54,11 @@ loop.run_forever()
 
 ## Observational notes and gotchas
 
-* Throws `gspread.exceptions.APIError` and `requests.RequestException` exceptions. Be sure to check for both!
+* This module does not define its own exceptions, it propagates instances of `gspread.exceptions.GSpreadException`.
 * Always call `AsyncioGspreadClientManager.authorize()`, `AsyncioGspreadClient.open_*()` and `AsyncioGspreadSpreadsheet.get_worksheet()` before doing any work on a spreadsheet. These methods keep an internal cache so it is painless to call them many times, even inside of a loop. This makes sure you always have a valid set of authentication credentials from Google.
 * The only object you should store in your application is the `AsyncioGspreadClientManager` (`agcm`).
 * There is a [bug in the underlying gspread library](https://github.com/burnash/gspread/issues/600) where the `Spreadsheet.title` property does I/O. I think this should be fixed at the gspread layer, but until then you may have issues from failed API calls when accessing the `.title` property.
-* Right now the `gspread_asyncio` code does not support bulk appends of rows or bulk changes of cells. When this is done `gspread_asyncio` will support batching of these Google API calls without any changes to the Python `gspread_asyncio` API.
+* Right now the `gspread` library does not support bulk appends of rows or bulk changes of cells. When this is done `gspread_asyncio` will support batching of these Google API calls without any changes to the Python `gspread_asyncio` API.
 * I came up with the default 1.1 second delay between API calls (the `gspread_delay` kwarg) after extensive experimentation. The official API rate limit is one call every second but however Google measures these things introduces a tiny bit of jitter that will get you rate blocked if you ride that limit exactly.
 * Google's service reliability on these endpoints is surprisingly bad. There are frequent HTTP 500s and the retry logic will save your butt in long-running scripts or short, one-shot, one-off ones.
 * Experimentation also found that Google's credentials expire after an hour and the default `reauth_interval` of 45 minutes takes care of that just fine.

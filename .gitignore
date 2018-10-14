@@ -1,7 +1,10 @@
 build
 dist
 *.egg-info
+__pycache__
 
 venv
 version_tag
 wheeltest
+
+_build
