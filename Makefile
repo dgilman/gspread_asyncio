@@ -2,7 +2,7 @@ travis-install:
 	pip install -r docs/requirements.txt
 
 version-tag:
-	git describe --tags > version-tag
+	git describe --tags > version_tag
 
 wheel: version-tag
 	python setup.py sdist bdist_wheel
