@@ -1,2 +1,3 @@
+Sphinx==1.8.*
 m2r==0.2.1
 sphinxcontrib-trio==1.0.1
