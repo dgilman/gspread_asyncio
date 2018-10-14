@@ -373,6 +373,9 @@ class AsyncioGspreadSpreadsheet(object):
       self._ws_cache_title = {}
       self._ws_cache_idx = {}
 
+   def __repr__(self):
+      return '<{0} id:{1}>'.format(self.__class__.__name__, self.ss.id)
+
    async def add_worksheet(self, title, rows, cols):
       """Add new worksheet (tab) to a spreadsheet. Wraps :meth:`gspread.models.Spreadsheet.add_worksheet`.
 
@@ -523,6 +526,9 @@ class AsyncioGspreadWorksheet(object):
       self.agcm = agcm
       self.ws = ws
       self.dirty_cells = []
+
+   def __repr__(self):
+      return '<{0} id:{1}>'.format(self.__class__.__name__, self.ws.id)
 
       # XXX the cached cell updater uses the default value_input_option
       # Might want to come up with a way of letting users set that
