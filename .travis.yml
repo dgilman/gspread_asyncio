@@ -14,6 +14,8 @@ jobs:
   include:
     - stage: deploy
       python: "3.6"
+      before-deploy:
+        - make version-tag
       deploy:
         provider: pypi
         distributions: "sdist bdist_wheel"
