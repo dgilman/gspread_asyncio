@@ -26,7 +26,7 @@ setuptools.setup(
     ],
     keywords=['spreadsheets', 'google-spreadsheets', 'asyncio'],
     project_urls={
-      "Documentation": "gh pages",
+      "Documentation": "https://gspread-asyncio.readthedocs.io/en/latest/",
       "Source": "https://github.com/dgilman/gspread_asyncio",
       "Tracker": "https://github.com/dgilman/gspread_asyncio/issues"
     },
