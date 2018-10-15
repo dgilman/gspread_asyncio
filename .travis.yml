@@ -14,7 +14,7 @@ jobs:
   include:
     - stage: deploy
       python: "3.6"
-      before-deploy:
+      before_deploy:
         - make version-tag
       deploy:
         provider: pypi
