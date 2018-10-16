@@ -18,7 +18,7 @@ script:
 jobs:
   include:
     - stage: deploy
-      python: "3.6"
+      python: 3.6
       before_deploy:
         - make version-tag
       deploy:
