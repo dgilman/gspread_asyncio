@@ -296,6 +296,8 @@ class AsyncioGspreadClient(object):
    async def open(self, title):
       """Opens a Google Spreadsheet by title. Wraps :meth:`gspread.Client.open`.
 
+      Feel free to call this method often, even in a loop, as it caches the underlying spreadsheet object.
+
       :param title: The title of the spreadsheet
       :type title: str
       :returns: :class:`~gspread_asyncio.AsyncioGspreadSpreadsheet`
@@ -310,6 +312,8 @@ class AsyncioGspreadClient(object):
 
    async def open_by_key(self, key):
       """Opens a Google Spreadsheet by spreasheet id. Wraps :meth:`gspread.Client.open_by_key`.
+
+      Feel free to call this method often, even in a loop, as it caches the underlying spreadsheet object.
 
       :param key: Google's spreadsheet id
       :type key: str
@@ -326,6 +330,8 @@ class AsyncioGspreadClient(object):
    async def open_by_url(self, url):
       """Opens a Google Spreadsheet from a URL. Wraps :meth:`gspread.Client.open_by_url`.
 
+      Feel free to call this method often, even in a loop, as it caches the underlying spreadsheet object.
+
       :param url: URL to a Google Spreadsheet
       :type url: str
       :returns: :class:`~gspread_asyncio.AsyncioGspreadSpreadsheet`
@@ -335,6 +341,8 @@ class AsyncioGspreadClient(object):
 
    async def openall(self, title=None):
       """Open all available spreadsheets. Wraps :meth:`gspread.Client.openall`.
+
+      Feel free to call this method often, even in a loop, as it caches the underlying spreadsheet objects.
 
       :param title: (optional) If specified can be used to filter spreadsheets by title.
       :type title: str
@@ -406,6 +414,8 @@ class AsyncioGspreadSpreadsheet(object):
 
    async def get_worksheet(self, index):
       """Retrieves a worksheet (tab) from a spreadsheet by index number. Indexes start from zero. Wraps :meth:`gspread.models.Spreadsheet.get_worksheet`.
+
+      Feel free to call this method often, even in a loop, as it caches the underlying worksheet object.
 
       :param index: Index of worksheet
       :type index: int
@@ -490,6 +500,8 @@ class AsyncioGspreadSpreadsheet(object):
    async def worksheet(self, title):
       """Gets a worksheet (tab) by title. Wraps :meth:`gspread.models.Spreadsheet.worksheet`.
 
+      Feel free to call this method often, even in a loop, as it caches the underlying worksheet object.
+
       :param title: Human-readable title of the worksheet.
       :type title: str
       :returns: :class:`~gspread_asyncio.AsyncioGspreadWorksheet`
@@ -504,6 +516,8 @@ class AsyncioGspreadSpreadsheet(object):
 
    async def worksheets(self):
       """Gets all worksheets (tabs) in a spreadsheet. Wraps :meth:`gspread.models.Spreadsheet.worksheets`.
+
+      Feel free to call this method often, even in a loop, as it caches the underlying worksheet objects.
 
       :returns: :py:class:`list` of :class:`~gspread_asyncio.AsyncioGspreadWorksheet`
       """
