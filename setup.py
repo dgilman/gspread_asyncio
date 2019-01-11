@@ -16,7 +16,7 @@ setuptools.setup(
     author_email='dgilman@gilslotd.com',
     license='MIT',
     classifiers=[
-       'Development Status :: 4 - Beta',
+       'Development Status :: 5 - Production/Stable',
        'Framework :: AsyncIO',
        'Intended Audience :: Developers',
        'License :: OSI Approved :: MIT License',
