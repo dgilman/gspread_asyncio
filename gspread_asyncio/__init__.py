@@ -371,7 +371,7 @@ class AsyncioGspreadClient(object):
 class AsyncioGspreadSpreadsheet(object):
    """An :mod:`asyncio` wrapper for :class:`gspread.models.Spreadsheet`. You **must** obtain instances of this class from :meth:`AsyncioGspreadClient.open`, :meth:`AsyncioGspreadClient.open_by_key`, :meth:`AsyncioGspreadClient.open_by_url`, or :meth:`AsyncioGspreadClient.openall`.
    """
-   def __init__(self, agcm, ss):
+   def __init__(self, agcm, ss: gspread.Spreadsheet):
       self.agcm = agcm
       self.ss = ss
 
@@ -533,7 +533,7 @@ class AsyncioGspreadSpreadsheet(object):
 class AsyncioGspreadWorksheet(object):
    """An :mod:`asyncio` wrapper for :class:`gspread.models.Worksheet`. You **must** obtain instances of this class from :meth:`AsynctioGspreadSpreadsheet.add_worksheet`, :meth:`AsyncioGspreadSpreadsheet.get_worksheet`, :meth:`AsyncioGspreadSpreadsheet.worksheet`, or :meth:`AsyncioGspreadSpreadsheet.worksheets`.
    """
-   def __init__(self, agcm, ws):
+   def __init__(self, agcm, ws: gspread.Worksheet):
       self.agcm = agcm
       self.ws = ws
       self.dirty_cells = []
@@ -543,6 +543,49 @@ class AsyncioGspreadWorksheet(object):
 
       # XXX the cached cell updater uses the default value_input_option
       # Might want to come up with a way of letting users set that
+
+   async def batch_update(
+           self, data, major_dimension=None, value_input_option=None
+   ):
+       """Sets values in one or more cell ranges of the sheet at once.
+
+       Wraps :meth:`gspread.models.Worksheet.batch_update`.
+
+       :param list data: List of dictionaries in the form of
+           `{'range': '...', 'values': [[.., ..], ...]}` where `range`
+           is a target range to update in A1 notation or a named range,
+           and `values` is a list of lists containing new values.
+       :param str major_dimension: (optional) The major dimension of the
+           values. Either ``ROWS`` or ``COLUMNS``.
+       :param str value_input_option: (optional) How the input data should be
+           interpreted. Possible values are:
+           ``RAW``
+               The values the user has entered will not be parsed and will be
+               stored as-is.
+           ``USER_ENTERED``
+               The values will be parsed as if the user typed them into the
+               UI. Numbers will stay as numbers, but strings may be converted
+               to numbers, dates, etc. following the same rules that are
+               applied when entering text into a cell via
+               the Google Sheets UI.
+       Examples::
+           worksheet.batch_update([{
+               'range': 'A1:B1',
+               'values': [['42', '43']],
+           }, {
+               'range': 'my_range',
+               'values': [['44', '45']],
+           }])
+           # Note: named ranges are defined in the scope of
+           # a spreadsheet, so even if `my_range` does not belong to
+           # this sheet it is still updated
+       """
+       return await self.agcm._call(
+           self.ws.batch_update,
+           data,
+           major_dimension=major_dimension,
+           value_input_option=value_input_option
+       )
 
    async def acell(self, label, value_render_option='FORMATTED_VALUE'):
       """Returns an instance of a :class:`gspread.models.Cell`. Wraps :meth:`gspread.models.Worksheet.acell`.
