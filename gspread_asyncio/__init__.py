@@ -544,8 +544,9 @@ class AsyncioGspreadWorksheet(object):
       # XXX the cached cell updater uses the default value_input_option
       # Might want to come up with a way of letting users set that
 
+   @_nowait
    async def batch_update(
-           self, data, major_dimension=None, value_input_option=None
+           self, data, value_input_option=None, include_values_in_response=None
    ):
        """Sets values in one or more cell ranges of the sheet at once.
 
@@ -555,19 +556,24 @@ class AsyncioGspreadWorksheet(object):
            `{'range': '...', 'values': [[.., ..], ...]}` where `range`
            is a target range to update in A1 notation or a named range,
            and `values` is a list of lists containing new values.
-       :param str major_dimension: (optional) The major dimension of the
-           values. Either ``ROWS`` or ``COLUMNS``.
+
+           For input, supported value types are: bool, string, and double.
+           Null values will be skipped. To set a cell to an empty value, set
+           the string value to an empty string.
+
        :param str value_input_option: (optional) How the input data should be
-           interpreted. Possible values are:
-           ``RAW``
-               The values the user has entered will not be parsed and will be
-               stored as-is.
-           ``USER_ENTERED``
-               The values will be parsed as if the user typed them into the
-               UI. Numbers will stay as numbers, but strings may be converted
-               to numbers, dates, etc. following the same rules that are
-               applied when entering text into a cell via
-               the Google Sheets UI.
+       interpreted.
+
+       Possible values are:
+
+       RAW             The values the user has entered will not be parsed
+                       and will be stored as-is.
+       USER_ENTERED    The values will be parsed as if the user typed them
+                       into the UI. Numbers will stay as numbers, but
+                       strings may be converted to numbers, dates, etc.
+                       following the same rules that are applied when
+                       entering text into a cell via the Google Sheets UI.
+
        Examples::
            worksheet.batch_update([{
                'range': 'A1:B1',
@@ -575,16 +581,19 @@ class AsyncioGspreadWorksheet(object):
            }, {
                'range': 'my_range',
                'values': [['44', '45']],
+           }, {
+               'range': 'A2:B2',
+               'values': [['42', None]],
            }])
            # Note: named ranges are defined in the scope of
            # a spreadsheet, so even if `my_range` does not belong to
            # this sheet it is still updated
        """
        return await self.agcm._call(
-           self.ws.batch_update,
-           data,
-           major_dimension=major_dimension,
-           value_input_option=value_input_option
+          self.ws.batch_update,
+          data,
+          value_input_option=value_input_option,
+          include_values_in_response=include_values_in_response
        )
 
    async def acell(self, label, value_render_option='FORMATTED_VALUE'):
@@ -622,9 +631,6 @@ class AsyncioGspreadWorksheet(object):
       """
       return await self.agcm._call(self.ws.add_rows, rows)
 
-# It would be great if there was an append_rows,
-# and someone even implemented it in a PR upstream
-# But we do not have it yet.
    @_nowait
    async def append_row(self, values, value_input_option='RAW'):
       """Adds a row to the worksheet and populates it with values. Widens the worksheet if there are more values than columns. Wraps :meth:`gspread.models.Worksheet.append_row`.
@@ -640,6 +646,45 @@ class AsyncioGspreadWorksheet(object):
       .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
       """
       return await self.agcm._call(self.ws.append_row, values, value_input_option=value_input_option)
+
+   @_nowait
+   async def append_rows(
+        self,
+        values,
+        value_input_option='RAW',
+        insert_data_option=None,
+        table_range=None,
+   ):
+       """Adds multiple rows to the worksheet and populates them with values.
+
+       Widens the worksheet if there are more values than columns.
+
+       NOTE: it doesn't extends filtered range.
+
+       Wraps :meth:`gspread.models.Worksheet.append_rows`.
+
+       :param list values: List of rows each row is List of values for
+           the new row.
+       :param str value_input_option: (optional) Determines how input data
+           should be interpreted. See `ValueInputOption`_ in the Sheets API.
+       :param str insert_data_option: (optional) Determines how the input data
+           should be inserted. See `InsertDataOption`_ in the Sheets API
+           reference.
+       :param str table_range: (optional) The A1 notation of a range to search
+           for a logical table of data. Values are appended after the last row
+           of the table. Examples: `A1` or `B2:D4`
+
+       .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
+       .. _InsertDataOption: https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append#InsertDataOption
+       """
+
+       return await self.agcm._call(
+          self.ws.append_rows,
+          values,
+          value_input_option=value_input_option,
+          insert_data_option=insert_data_option,
+          table_range=table_range,
+       )
 
    async def cell(self, row, col, value_render_option='FORMATTED_VALUE'):
       """Returns an instance of a :class:`gspread.models.Cell` located at `row` and `col` column. Wraps :meth:`gspread.models.Worksheet.cell`.
@@ -769,6 +814,23 @@ class AsyncioGspreadWorksheet(object):
 
       """
       return await self.agcm._call(self.ws.insert_row, values, index=index, value_input_option=value_input_option)
+
+   @_nowait
+   async def insert_rows(self, values, row=1, value_input_option='RAW'):
+       """Adds multiple rows to the worksheet at the specified index and
+       populates them with values.
+
+       :param list values: List of row lists. a list of lists, with the lists
+           each containing one row's values. Widens the worksheet if there are
+           more values than columns.
+       :param int row: Start row to update (one-based). Defaults to 1 (one).
+       """
+       return await self.agcm._call(
+          self.ws.insert_rows,
+          values,
+          row=row,
+          value_input_option=value_input_option,
+       )
 
    async def range(self, *args, **kwargs):
       """Returns a list of :class:`Cell` objects from a specified range. Wraps :meth:`gspread.models.Worksheet.range`.
