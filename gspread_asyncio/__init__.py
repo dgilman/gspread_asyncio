@@ -743,6 +743,52 @@ class AsyncioGspreadWorksheet(object):
       """
       return await self.agcm._call(self.ws.delete_row, index)
 
+   @_nowait
+   async def add_protected_range(
+       self,
+       name,
+       editor_users_emails=None,
+       editor_groups_emails=None,
+       description=None,
+       warning_only=None,
+       requesting_user_can_edit=None,
+   ):
+       """Add protected range to the sheet. Only the editors can edit
+       the protected range.
+
+       :param str name: A string with range value in A1 notation,
+           e.g. 'A1:A5'.
+
+       Alternatively, you may specify numeric boundaries. All values
+       index from 1 (one):
+
+       :param int first_row: First row number
+       :param int first_col: First column number
+       :param int last_row: Last row number
+       :param int last_col: Last column number
+
+       :param list editor_users_emails: (optional) The email addresses of
+           users with edit access to the protected range.
+       :param list editor_groups_emails: (optional) The email addresses of
+           groups with edit access to the protected range.
+       :param str description: (optional) Description for the protected
+           ranges.
+       :param boolean warning_only: (optional) When true this protected range
+           will show a warning when editing. Defaults to ``False``.
+       :param boolean requesting_user_can_edit: (optional) True if the user
+           who requested this protected range can edit the protected cells.
+           Defaults to ``False``.
+       """
+       return await self.agcm._call(
+          self.ws.add_protected_range,
+          name,
+          editor_users_emails=editor_users_emails,
+          editor_groups_emails=editor_groups_emails,
+          description=description,
+          warning_only=warning_only,
+          requesting_user_can_edit=requesting_user_can_edit,
+       )
+
    async def find(self, query):
       """Finds the first cell matching the query. Wraps :meth:`gspread.models.Worksheet.find`.
 
