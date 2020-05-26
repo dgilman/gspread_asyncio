@@ -956,7 +956,50 @@ class AsyncioGspreadWorksheet(object):
       """
       return await self.agcm._call(self.ws.update_cells, cell_list, value_input_option=value_input_option)
 
+   @_nowait
+   async def batch_get(
+           self,
+           ranges,
+           major_dimension=None,
+           value_render_option=None,
+           date_time_render_option=None,
+   ):
+       """Returns one or more ranges of values from the sheet.
+
+       :param list ranges: List of cell ranges in the A1 notation or named
+           ranges.
+
+       :param str major_dimension: (optional) The major dimension that results
+           should use.
+
+       :param str value_render_option: (optional) How values should be
+           represented in the output. The default render option
+           is `FORMATTED_VALUE`.
+
+       :param str date_time_render_option: (optional) How dates, times, and
+           durations should be represented in the output. This is ignored if
+           value_render_option is FORMATTED_VALUE. The default dateTime render
+           option is `SERIAL_NUMBER`.
+
+       Examples::
+
+           # Read values from 'A1:B2' range and 'F12' cell
+           worksheet.batch_get(['A1:B2', 'F12'])
+       """
+       return await self.agcm._call(
+          self.ws.batch_get,
+          ranges,
+          major_dimension=major_dimension,
+          value_render_option=value_render_option,
+          date_time_render_option=date_time_render_option,
+       )
+
    async def update_title(self, title):
       raise NotImplemented("This breaks ws caching, could be implemented later")
 
-__all__ = ["AsyncioGspreadClientManager", "AsyncioGspreadClient", "AsyncioGspreadSpreadsheet", "AsyncioGspreadWorksheet"]
+__all__ = [
+   "AsyncioGspreadClientManager",
+   "AsyncioGspreadClient",
+   "AsyncioGspreadSpreadsheet",
+   "AsyncioGspreadWorksheet"
+]
