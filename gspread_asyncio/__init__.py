@@ -575,7 +575,7 @@ class AsyncioGspreadWorksheet(object):
                        entering text into a cell via the Google Sheets UI.
 
        Examples::
-           worksheet.batch_update([{
+           await worksheet.batch_update([{
                'range': 'A1:B1',
                'values': [['42', '43']],
            }, {
@@ -1030,7 +1030,7 @@ class AsyncioGspreadWorksheet(object):
        Examples::
 
            # Read values from 'A1:B2' range and 'F12' cell
-           worksheet.batch_get(['A1:B2', 'F12'])
+           await worksheet.batch_get(['A1:B2', 'F12'])
        """
        return await self.agcm._call(
           self.ws.batch_get,
