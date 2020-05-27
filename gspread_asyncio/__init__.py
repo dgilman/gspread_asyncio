@@ -179,39 +179,6 @@ class AsyncioGspreadClientManager(object):
          agc = self._agc_cache[self.auth_time]
       return agc
 
-# This is part of the cell update batching logic. It will be usable when gspread
-# gets a functioning batch update method.
-
-#   async def _flush_dirty_worksheets(self):
-#      if len(self._dirty_worksheets) == 0:
-#         self._cell_flusher_active = False
-#         return
-#
-#      # Don't call async in this critical section.
-#      # If interrupted, something could add to dirty_cells/dirty_worksheets
-#      # and the new addition would be lost.
-#      batch_updates = []
-#      for dws in self._dirty_worksheets:
-#         batch_updates.append((dws, [Cell(row, col, value) for row, col, value in dws.dirty_cells]))
-#         dws.dirty_cells = []
-#      self._dirty_worksheets = []
-#
-#      for dws, cells in batch_updates:
-#         try:
-#            await dws.update_cells(cells)
-#         except gspread.exceptions.GSpreadException as e:
-#            await self._handle_dirty_worksheet_errors(dws, cells, e)
-#
-#      # Reschedule self one last time in case we got raced during the above update_cells call.
-#      # The followup will terminate immediately if there's nothing to do so it's pretty harmless.
-#      self._loop.call_later(self.cell_flush_delay,
-#         lambda: asyncio.ensure_future(self._flush_dirty_worksheets(), loop=self._loop))
-#
-#   async def _handle_dirty_worksheet_errors(self, dws, cells, e):
-#      # By default, log an error and move on.
-#      # Subclass this to get custom logging or error handling.
-#      self.l.exception('Error while flushing dirty cells: {0}'.format(e))
-
 class AsyncioGspreadClient(object):
    """An :mod:`asyncio` wrapper for :class:`gspread.Client`. You **must** obtain instances of this class from :meth:`gspread_asyncio.AsyncioGspreadClientManager.authorize`.
    """
@@ -588,6 +555,8 @@ class AsyncioGspreadWorksheet(object):
            # Note: named ranges are defined in the scope of
            # a spreadsheet, so even if `my_range` does not belong to
            # this sheet it is still updated
+
+       .. versionadded:: 1.1
        """
        return await self.agcm._call(
           self.ws.batch_update,
@@ -673,6 +642,8 @@ class AsyncioGspreadWorksheet(object):
        :param str table_range: (optional) The A1 notation of a range to search
            for a logical table of data. Values are appended after the last row
            of the table. Examples: `A1` or `B2:D4`
+
+       .. versionadded:: 1.1
 
        .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
        .. _InsertDataOption: https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append#InsertDataOption
@@ -778,6 +749,8 @@ class AsyncioGspreadWorksheet(object):
        :param boolean requesting_user_can_edit: (optional) True if the user
            who requested this protected range can edit the protected cells.
            Defaults to ``False``.
+
+        .. versionadded:: 1.1
        """
        return await self.agcm._call(
           self.ws.add_protected_range,
@@ -870,6 +843,8 @@ class AsyncioGspreadWorksheet(object):
            each containing one row's values. Widens the worksheet if there are
            more values than columns.
        :param int row: Start row to update (one-based). Defaults to 1 (one).
+
+       .. versionadded:: 1.1
        """
        return await self.agcm._call(
           self.ws.insert_rows,
@@ -970,22 +945,6 @@ class AsyncioGspreadWorksheet(object):
       """
       return await self.agcm._call(self.ws.update_cell, row, col, value)
 
-      # Unfortunately, the caching here is broken
-      # update_cells creates a range out of the cells you provide,
-      # it's meant to be more like a fill of an area.
-      # If you shove an arbitrary amount of cells in there it'll wind up
-      # modifying cells outside of your range.
-#  async def update_cell_batch(self, row, col, value):
-#      self.dirty_cells.append((row, col, value))
-#      if self not in self.agcm._dirty_worksheets:
-#         self.agcm._dirty_worksheets.append(self)
-#      if self.agcm._cell_flusher_active == True:
-#         return
-#      else:
-#         self.agcm._cell_flusher_active = True
-#         self.agcm._loop.call_later(self.agcm.cell_flush_delay,
-#            lambda: asyncio.ensure_future(self.agcm._flush_dirty_worksheets(), loop=self.agcm._loop))
-
    @_nowait
    async def update_cells(self, cell_list, value_input_option='RAW'):
       """Updates many cells at once. Wraps :meth:`gspread.models.Worksheet.update_cells`.
@@ -1002,7 +961,6 @@ class AsyncioGspreadWorksheet(object):
       """
       return await self.agcm._call(self.ws.update_cells, cell_list, value_input_option=value_input_option)
 
-   @_nowait
    async def batch_get(
            self,
            ranges,
@@ -1031,6 +989,8 @@ class AsyncioGspreadWorksheet(object):
 
            # Read values from 'A1:B2' range and 'F12' cell
            await worksheet.batch_get(['A1:B2', 'F12'])
+
+       .. versionadded:: 1.1
        """
        return await self.agcm._call(
           self.ws.batch_get,
