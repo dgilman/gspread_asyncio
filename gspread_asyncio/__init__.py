@@ -429,6 +429,13 @@ class AsyncioGspreadSpreadsheet(object):
       self._ws_cache_idx[ws._properties['index']] = aws
       return aws
 
+   async def fetch_sheet_metadata(self, params=None):
+      """
+
+      .. versionadded:: 1.1
+      """
+      return await self.agcm._call(self.ss.fetch_sheet_metadata, params=params)
+
    @property
    def id(self):
       """:returns: Google's spreadsheet id.
