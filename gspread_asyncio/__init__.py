@@ -3,8 +3,8 @@ import functools
 import logging
 
 import gspread
+from gspread import utils as gspread_utils
 from gspread.utils import extract_id_from_url, a1_to_rowcol
-from gspread import Cell
 import requests
 
 # Copyright 2018 David Gilman
@@ -348,6 +348,17 @@ class AsyncioGspreadSpreadsheet(object):
    def __repr__(self):
       return '<{0} id:{1}>'.format(self.__class__.__name__, self.ss.id)
 
+   async def batch_update(self, body):
+      """Lower-level method that directly calls `spreadsheets.batchUpdate <https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/batchUpdate>`_.
+
+      :param dict body: `Request body <https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/batchUpdate#request-body>`_.
+      :returns: `Response body <https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/batchUpdate#response-body>`_.
+      :rtype: dict
+
+      .. versionadded:: 1.1
+      """
+      return await self.agcm._call(self.ss.batch_update, body=body)
+
    async def add_worksheet(self, title, rows, cols):
       """Add new worksheet (tab) to a spreadsheet. Wraps :meth:`gspread.models.Spreadsheet.add_worksheet`.
 
@@ -360,7 +371,7 @@ class AsyncioGspreadSpreadsheet(object):
       :returns: :py:class:`~gspread_asyncio.AsyncioGspreadWorksheet`
       """
       ws = await self.agcm._call(self.ss.add_worksheet, title, rows, cols)
-      aws = AsyncioGspreadWorksheet(self.agcm, ws)
+      aws = AsyncioGspreadWorksheet(self.agcm, ws, spreadsheet=self)
       self._ws_cache_title[ws.title] = aws
       self._ws_cache_idx[ws._properties['index']] = aws
       return aws
@@ -391,7 +402,7 @@ class AsyncioGspreadSpreadsheet(object):
       if index in self._ws_cache_idx:
          return self._ws_cache_idx[index]
       ws = await self.agcm._call(self.ss.get_worksheet, index)
-      aws = AsyncioGspreadWorksheet(self.agcm, ws)
+      aws = AsyncioGspreadWorksheet(self.agcm, ws, spreadsheet=self)
       self._ws_cache_title[ws.title] = aws
       self._ws_cache_idx[ws._properties['index']] = aws
       return aws
@@ -483,7 +494,7 @@ class AsyncioGspreadSpreadsheet(object):
       if title in self._ws_cache_title:
          return self._ws_cache_title[title]
       ws = await self.agcm._call(self.ss.worksheet, title)
-      aws = AsyncioGspreadWorksheet(self.agcm, ws)
+      aws = AsyncioGspreadWorksheet(self.agcm, ws, spreadsheet=self)
       self._ws_cache_title[title] = aws
       self._ws_cache_idx[ws._properties['index']] = aws
       return aws
@@ -498,7 +509,7 @@ class AsyncioGspreadSpreadsheet(object):
       wses = await self.agcm._call(self.ss.worksheets)
       awses = []
       for ws in wses:
-         aws = AsyncioGspreadWorksheet(self.agcm, ws)
+         aws = AsyncioGspreadWorksheet(self.agcm, ws, spreadsheet=self)
          self._ws_cache_title[ws.title] = aws
          self._ws_cache_idx[ws._properties['index']] = aws
          awses.append(aws)
@@ -507,9 +518,15 @@ class AsyncioGspreadSpreadsheet(object):
 class AsyncioGspreadWorksheet(object):
    """An :mod:`asyncio` wrapper for :class:`gspread.models.Worksheet`. You **must** obtain instances of this class from :meth:`AsynctioGspreadSpreadsheet.add_worksheet`, :meth:`AsyncioGspreadSpreadsheet.get_worksheet`, :meth:`AsyncioGspreadSpreadsheet.worksheet`, or :meth:`AsyncioGspreadSpreadsheet.worksheets`.
    """
-   def __init__(self, agcm, ws: gspread.Worksheet):
+   def __init__(
+      self,
+      agcm: AsyncioGspreadClientManager,
+      ws: gspread.Worksheet,
+      spreadsheet: AsyncioGspreadSpreadsheet = None,
+   ):
       self.agcm = agcm
       self.ws = ws
+      self.spreadsheet = spreadsheet
       self.dirty_cells = []
 
    def __repr__(self):
@@ -724,50 +741,69 @@ class AsyncioGspreadWorksheet(object):
    @_nowait
    async def add_protected_range(
        self,
-       name,
+       name=None,
        editor_users_emails=None,
        editor_groups_emails=None,
        description=None,
-       warning_only=None,
-       requesting_user_can_edit=None,
+       warning_only=False,
+       requesting_user_can_edit=False,
    ):
        """Add protected range to the sheet. Only the editors can edit
        the protected range.
 
-       :param str name: A string with range value in A1 notation,
-           e.g. 'A1:A5'.
-
-       Alternatively, you may specify numeric boundaries. All values
-       index from 1 (one):
-
-       :param int first_row: First row number
-       :param int first_col: First column number
-       :param int last_row: Last row number
-       :param int last_col: Last column number
-
-       :param list editor_users_emails: (optional) The email addresses of
+       :param str name: A string with range value in A1 notation, e.g. 'A1:A5'.
+           To protect whole Worksheet use `None` (default behaviour).
+       :param list editor_users_emails: The email addresses of
            users with edit access to the protected range.
        :param list editor_groups_emails: (optional) The email addresses of
            groups with edit access to the protected range.
        :param str description: (optional) Description for the protected
            ranges.
        :param boolean warning_only: (optional) When true this protected range
-           will show a warning when editing. Defaults to ``False``.
+           will show a warning when editing. If this field is true, then
+           editors are ignored. Defaults to ``False``.
        :param boolean requesting_user_can_edit: (optional) True if the user
            who requested this protected range can edit the protected cells.
            Defaults to ``False``.
 
-        .. versionadded:: 1.1
+       .. versionadded:: 1.1
        """
-       return await self.agcm._call(
-          self.ws.add_protected_range,
-          name,
-          editor_users_emails=editor_users_emails,
-          editor_groups_emails=editor_groups_emails,
-          description=description,
-          warning_only=warning_only,
-          requesting_user_can_edit=requesting_user_can_edit,
-       )
+       if not warning_only and not (editor_users_emails or editor_groups_emails):
+          raise ValueError(
+             'Editors must be specified when warning_only is False'
+          )
+
+       if name is not None:
+          grid_range = gspread_utils.a1_range_to_grid_range(name, self.id)
+       else:
+          # protect whole worksheet
+          # https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#gridrange
+          grid_range = {'sheetId': self.id}
+
+       protected_range = {
+          "range": grid_range,
+          "description": description,
+          "warningOnly": warning_only,
+          "requestingUserCanEdit": requesting_user_can_edit,
+       }
+
+       if not warning_only:
+          protected_range["editors"] = {
+             "users": editor_users_emails or [],
+             "groups": editor_groups_emails or [],
+          }
+
+       body = {
+          "requests": [
+             {
+                "addProtectedRange": {
+                   'protectedRange': protected_range
+                }
+             }
+          ]
+       }
+
+       return await self.spreadsheet.batch_update(body)
 
    async def find(self, query):
       """Finds the first cell matching the query. Wraps :meth:`gspread.models.Worksheet.find`.
