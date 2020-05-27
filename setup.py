@@ -7,7 +7,7 @@ def read(filename):
 
 setuptools.setup(
     name='gspread_asyncio',
-    version=read('version_tag').strip(),
+    version='1.1.0',
     description="asyncio wrapper for burnash's Google Spreadsheet API library, gspread",
     long_description=read('README.md'),
     long_description_content_type='text/markdown',
@@ -32,6 +32,6 @@ setuptools.setup(
     },
     python_requires='>=3.5',
     packages=setuptools.find_packages(),
-    install_requires=['requests==2.*', 'gspread==3.*']
+    install_requires=['requests==2.*', 'gspread>=3.4']
 )
 
