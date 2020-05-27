@@ -889,12 +889,7 @@ class AsyncioGspreadWorksheet(object):
 
        .. versionadded:: 1.1
        """
-       return await self.agcm._call(
-          self.ws.insert_rows,
-          values,
-          row=row,
-          value_input_option=value_input_option,
-       )
+       raise NotImplemented('does two network calls, may be implemented later')
 
    async def range(self, *args, **kwargs):
       """Returns a list of :class:`Cell` objects from a specified range. Wraps :meth:`gspread.models.Worksheet.range`.
