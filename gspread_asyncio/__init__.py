@@ -90,11 +90,18 @@ class AsyncioGspreadClientManager(object):
         self._cell_flusher_active = False
 
     async def _call(self, method, *args, **kwargs):
+        if "api_call_count" in kwargs:
+            api_call_count = kwargs["api_call_count"]
+            del kwargs["api_call_count"]
+        else:
+            api_call_count = 1
+
         while True:
             await self.call_lock.acquire()
             try:
                 fn = functools.partial(method, *args, **kwargs)
-                await self.delay()
+                for _ in range(api_call_count):
+                    await self.delay()
                 await self.before_gspread_call(method, args, kwargs)
                 rval = await self._loop.run_in_executor(None, fn)
                 return rval
@@ -210,7 +217,7 @@ class AsyncioGspreadClientManager(object):
         if delta >= self.gspread_delay:
             self.last_call = now
             return
-        await asyncio.sleep(self.gspread_delay - delta, loop=self._loop)
+        await asyncio.sleep(self.gspread_delay - delta)
         self.last_call = self._loop.time()
         return
 
@@ -956,6 +963,7 @@ class AsyncioGspreadWorksheet(object):
             description=description,
             warning_only=warning_only,
             requesting_user_can_edit=requesting_user_can_edit,
+            api_call_count=2,
         )
 
     async def find(self, query):
@@ -1059,7 +1067,11 @@ class AsyncioGspreadWorksheet(object):
     .. versionadded:: 1.1
        """
         return await self.agcm._call(
-            self.ws.insert_rows, values, row=row, value_input_option=value_input_option,
+            self.ws.insert_rows,
+            values,
+            row=row,
+            value_input_option=value_input_option,
+            api_call_count=2,
         )
 
     async def range(self, *args, **kwargs):
