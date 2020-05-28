@@ -13,7 +13,7 @@ install:
   - make travis-install
 
 script:
-  - make format-check
+  - if [[ $TRAVIS_PYTHON_VERSION != 3.5 ]]; then make format-check; fi
   - make test
   - make travis-script
 
