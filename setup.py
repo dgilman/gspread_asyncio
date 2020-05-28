@@ -7,9 +7,14 @@ def read(filename):
     return open(os.path.join(os.path.dirname(__file__), filename)).read()
 
 
+try:
+    version = read("version_tag").strip()
+except OSError:
+    version = "1.99dev"
+
 setuptools.setup(
     name="gspread_asyncio",
-    version=read("version_tag").strip(),
+    version=version,
     description="asyncio wrapper for burnash's Google Spreadsheet API library, gspread",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
