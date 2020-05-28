@@ -13,6 +13,7 @@ install:
   - make travis-install
 
 script:
+  - make format-check
   - make test
   - make travis-script
 
