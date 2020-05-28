@@ -204,13 +204,22 @@ intersphinx_mapping = {
 }
 
 import sphinx
+
+
 def monkeypatch(cls):
     """ decorator to monkey-patch methods """
+
     def decorator(f):
         method = f.__name__
         old_method = getattr(cls, method)
-        setattr(cls, method, lambda self, *args, **kwargs: f(old_method, self, *args, **kwargs))
+        setattr(
+            cls,
+            method,
+            lambda self, *args, **kwargs: f(old_method, self, *args, **kwargs),
+        )
+
     return decorator
+
 
 # workaround until https://github.com/miyakogi/m2r/pull/55 is merged
 @monkeypatch(sphinx.registry.SphinxComponentRegistry)

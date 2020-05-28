@@ -1,3 +1,4 @@
+import sys
 import asyncio
 import functools
 import logging
@@ -13,16 +14,24 @@ import requests
 # If it is true, the method call gets scheduled on the event loop and
 # returns a task.
 
+PY37 = sys.version_info >= (3, 7)
+
 
 def _nowait(f):
     @functools.wraps(f)
     async def wrapper(*args, **kwargs):
-        if "nowait" not in kwargs:
-            return await f(*args, **kwargs)
-        nowait = kwargs["nowait"]
-        del kwargs["nowait"]
+        nowait = False
+        if "nowait" in kwargs:
+            nowait = kwargs["nowait"]
+            del kwargs["nowait"]
+
         if nowait:
-            return asyncio.ensure_future(f(*args, **kwargs), loop=args[0].agcm._loop)
+            if PY37:
+                return asyncio.create_task(f(*args, **kwargs))
+            else:
+                return asyncio.ensure_future(
+                    f(*args, **kwargs), loop=args[0].agcm._loop
+                )
         else:
             return await f(*args, **kwargs)
 
@@ -63,8 +72,6 @@ class AsyncioGspreadClientManager(object):
         cell_flush_delay=5,
     ):
         self.credentials_fn = credentials_fn
-        if loop is None:
-            loop = asyncio.get_event_loop()
         self._loop = loop
 
         # seconds
@@ -75,9 +82,9 @@ class AsyncioGspreadClientManager(object):
 
         self._agc_cache = {}
         self.auth_time = None
-        self.auth_lock = asyncio.Lock(loop=self._loop)
+        self.auth_lock = asyncio.Lock()
         self.last_call = None
-        self.call_lock = asyncio.Lock(loop=self._loop)
+        self.call_lock = asyncio.Lock()
 
         self._dirty_worksheets = []
         self._cell_flusher_active = False
@@ -218,6 +225,12 @@ class AsyncioGspreadClientManager(object):
 
     :returns: a ready-to-use :class:`~gspread_asyncio.AsyncioGspreadClient`
       """
+        if self._loop is None:
+            if PY37:
+                self._loop = asyncio.get_running_loop()
+            else:
+                self._loop = asyncio.get_event_loop()
+
         await self.auth_lock.acquire()
         try:
             return await self._authorize()
