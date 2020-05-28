@@ -1,6 +1,7 @@
 travis-install:
 	pip install -r docs/requirements.txt
 	pip install -r tests/requirements.txt
+	pip install -r requirements_dev.txt
 	openssl aes-256-cbc -d -md rmd160 -pass pass:$(OPENSSL_PASS) -in tests/creds.json.enc -out tests/creds.json
 	cp tests/.env.example tests/.env
 
@@ -21,3 +22,10 @@ encrypt-test-files:
 # You can use this to run the tests locally
 test:
 	. tests/.env && python -m unittest tests.integration
+
+BLACK_FILES=*.py gspread_asyncio/*.py tests/*.py docs/*.py
+format:
+	black $(BLACK_FILES)
+
+format-check:
+	black --check $(BLACK_FILES)
