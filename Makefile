@@ -1,9 +1,11 @@
 travis-install:
 	pip install -r docs/requirements.txt
 	pip install -r tests/requirements.txt
-	pip install -r requirements_dev.txt
 	openssl aes-256-cbc -d -md rmd160 -pass pass:$(OPENSSL_PASS) -in tests/creds.json.enc -out tests/creds.json
 	cp tests/.env.example tests/.env
+
+black-install:
+	pip install -r requirements_dev.txt
 
 version-tag:
 	git describe --tags > version_tag

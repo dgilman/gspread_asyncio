@@ -11,9 +11,10 @@ python:
 
 install:
   - make travis-install
+  - if [[ $TRAVIS_PYTHON_VERSION == 3.8 ]]; then make black-install; fi
 
 script:
-  - if [[ $TRAVIS_PYTHON_VERSION != 3.5 ]]; then make format-check; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == 3.8 ]]; then make format-check; fi
   - make test
   - make travis-script
 
