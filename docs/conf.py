@@ -31,6 +31,7 @@ release = ""
 
 
 # -- General configuration ---------------------------------------------------
+suppress_warnings = ["toc.circular"]
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
@@ -201,6 +202,7 @@ intersphinx_mapping = {
     "oauth2client": ("https://oauth2client.readthedocs.io/en/latest/", None),
     "gspread": ("https://gspread.readthedocs.io/en/latest/", None),
     "requests": ("https://requests.readthedocs.io/en/master/", None),
+    "google-auth": ("https://google-auth.readthedocs.io/en/latest/", None),
 }
 
 import sphinx
@@ -229,3 +231,6 @@ def add_source_parser(_old_add_source_parser, self, *args, **kwargs):
     if isinstance(args[0], str):
         args = args[1:]
     return _old_add_source_parser(self, *args, **kwargs)
+
+
+autodoc_typehints = "none"
