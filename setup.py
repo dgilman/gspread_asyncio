@@ -37,7 +37,7 @@ setuptools.setup(
         "Source": "https://github.com/dgilman/gspread_asyncio",
         "Tracker": "https://github.com/dgilman/gspread_asyncio/issues",
     },
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     packages=setuptools.find_packages(),
     install_requires=["requests==2.*", "gspread==3.6.*"],
 )

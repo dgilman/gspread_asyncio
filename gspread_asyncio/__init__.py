@@ -8,6 +8,7 @@ from typing import (
     TYPE_CHECKING,
     Optional,
     List,
+    Dict,
 )
 
 import gspread
@@ -109,13 +110,12 @@ class AsyncioGspreadClientManager(object):
         # arg is minutes, the stored value is seconds
         self.reauth_interval = reauth_interval * 60
 
-        self._agc_cache = {}
-        self.auth_time = None
+        self._agc_cache: "Dict[float, AsyncioGspreadClient]" = {}
+        self.auth_time: Optional[float] = None
         self.auth_lock = asyncio.Lock()
-        self.last_call = None
+        self.last_call: Optional[float] = None
         self.call_lock = asyncio.Lock()
 
-        self._dirty_worksheets = []
         self._cell_flusher_active = False
 
     async def _call(self, method, *args, **kwargs):
@@ -297,8 +297,8 @@ class AsyncioGspreadClient(object):
     def __init__(self, agcm: AsyncioGspreadClientManager, gc: gspread.Client):
         self.agcm = agcm
         self.gc = gc
-        self._ss_cache_title = {}
-        self._ss_cache_key = {}
+        self._ss_cache_title: "Dict[str, AsyncioGspreadSpreadsheet]" = {}
+        self._ss_cache_key: "Dict[str, AsyncioGspreadSpreadsheet]" = {}
 
     async def create(self, title: str) -> "AsyncioGspreadSpreadsheet":
         """Create a new Google Spreadsheet. Wraps
@@ -514,8 +514,8 @@ class AsyncioGspreadSpreadsheet(object):
         self.agcm = agcm
         self.ss = ss
 
-        self._ws_cache_title = {}
-        self._ws_cache_idx = {}
+        self._ws_cache_title: "Dict[str, AsyncioGspreadWorksheet]" = {}
+        self._ws_cache_idx: "Dict[str, AsyncioGspreadWorksheet]" = {}
 
     def __repr__(self):
         return "<{0} id:{1}>".format(self.__class__.__name__, self.ss.id)
@@ -722,7 +722,6 @@ class AsyncioGspreadWorksheet(object):
     def __init__(self, agcm, ws: gspread.Worksheet):
         self.agcm = agcm
         self.ws = ws
-        self.dirty_cells = []
 
     def __repr__(self):
         return "<{0} id:{1}>".format(self.__class__.__name__, self.ws.id)
