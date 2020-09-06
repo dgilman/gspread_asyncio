@@ -998,6 +998,7 @@ class AsyncioGspreadWorksheet(object):
         :param nowait: (optional) If true, return a scheduled future instead of
             waiting for the API call to complete.
         :type nowait: bool
+
         .. versionadded:: 1.2
         """
         return await self.agcm._call(self.ws.delete_rows, index, end_index=end_index)
