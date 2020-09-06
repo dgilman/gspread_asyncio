@@ -26,7 +26,6 @@ from oauth2client.service_account import ServiceAccountCredentials
 # First, set up a callback function that fetches our credentials off the disk.
 # gspread_asyncio needs this to re-authenticate when credentials expire.
 
-
 def get_creds():
     return ServiceAccountCredentials.from_json_keyfile_name(
         "serviceacct_spreadsheet.json",
@@ -37,16 +36,12 @@ def get_creds():
         ],
     )
 
-
 # Create an AsyncioGspreadClientManager object which
 # will give us access to the Spreadsheet API.
 
-
 agcm = gspread_asyncio.AsyncioGspreadClientManager(get_creds)
 
-
 # Here's an example of how you use the API:
-
 
 async def example(agcm):
     # Always authorize first.
@@ -71,7 +66,6 @@ async def example(agcm):
             await ws.update_cell(row, col, val + " ws")
             await zero_ws.update_cell(row, col, val + " zero ws")
     print("All done!")
-
 
 # Turn on debugging if you're new to asyncio!
 asyncio.run(example(agcm), debug=True)

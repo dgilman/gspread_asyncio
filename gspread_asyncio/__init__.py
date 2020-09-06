@@ -91,7 +91,7 @@ class AsyncioGspreadClientManager(object):
     :param loop: (optional) The asyncio event loop to use.
     :type loop: :py:class:`~asyncio.AbstractEventLoop`
     :param float cell_flush_delay: (optional) Currently unused
-   """
+    """
 
     def __init__(
         self,
@@ -151,47 +151,47 @@ class AsyncioGspreadClientManager(object):
 
     async def before_gspread_call(self, method, args, kwargs):
         """Called before invoking a :mod:`gspread` method. Optionally
-    subclass this to implement custom logging, tracing, or modification
-    of the method arguments.
+        subclass this to implement custom logging, tracing, or modification
+        of the method arguments.
 
-    The default implementation logs the method name, args and kwargs.
+        The default implementation logs the method name, args and kwargs.
 
-    :param method: gspread class method to be invoked
-    :param args: positional arguments for the gspread class method
-    :param kwargs: keyword arguments for the gspread class method
-      """
+        :param method: gspread class method to be invoked
+        :param args: positional arguments for the gspread class method
+        :param kwargs: keyword arguments for the gspread class method
+        """
         logging.debug(
             "Calling {0} {1} {2}".format(method.__name__, str(args), str(kwargs))
         )
 
     async def handle_gspread_error(self, e, method, args, kwargs):
         """Called in the exception handler for a
-    :class:`gspread.exceptions.APIError`. Optionally subclass this to
-    implement custom error handling, error logging, rate limiting,
-    backoff, or jitter.
+        :class:`gspread.exceptions.APIError`. Optionally subclass this to
+        implement custom error handling, error logging, rate limiting,
+        backoff, or jitter.
 
-    The default implementation logs the error and sleeps for
-    :attr:`gspread_delay` seconds. It does not throw an exception
-    of its own so it keeps retrying failed requests forever.
+        The default implementation logs the error and sleeps for
+        :attr:`gspread_delay` seconds. It does not throw an exception
+        of its own so it keeps retrying failed requests forever.
 
-    gspread throws an :class:`~gspread.exceptions.APIError` when an error is
-    returned from the Google API. `Google has some documentation on their
-    HTTP status codes <https://cloud.google.com/apis/design/errors>`_.
-    gspread makes a :class:`requests.Response` object accessible at
-    :attr:`e.response`.
+        gspread throws an :class:`~gspread.exceptions.APIError` when an error is
+        returned from the Google API. `Google has some documentation on their
+        HTTP status codes <https://cloud.google.com/apis/design/errors>`_.
+        gspread makes a :class:`requests.Response` object accessible at
+        :attr:`e.response`.
 
-    Note that the internal :meth:`_call` method which invokes this method
-    will not do so for any HTTP 400 statuses. These are errors that arise
-    from mistaken usage of the Google API and are fatal. The exception is
-    status code 429, the rate limiting status, to let this code handle
-    client-side rate limiting.
+        Note that the internal :meth:`_call` method which invokes this method
+        will not do so for any HTTP 400 statuses. These are errors that arise
+        from mistaken usage of the Google API and are fatal. The exception is
+        status code 429, the rate limiting status, to let this code handle
+        client-side rate limiting.
 
-    :param e: Exception object thrown by gspread
-    :type e: :class:`~gspread.exceptions.APIError`
-    :param method: gspread class method called
-    :param args: positional arguments for the gspread class method
-    :param kwargs: keyword arguments for the gspread class method
-      """
+        :param e: Exception object thrown by gspread
+        :type e: :class:`~gspread.exceptions.APIError`
+        :param method: gspread class method called
+        :param args: positional arguments for the gspread class method
+        :param kwargs: keyword arguments for the gspread class method
+        """
         # By default, retry forever because sometimes Google just poops out and gives us a 500.
         # Subclass this to get custom error handling, backoff, jitter,
         # maybe even some cancellation
@@ -205,22 +205,22 @@ class AsyncioGspreadClientManager(object):
 
     async def handle_requests_error(self, e, method, args, kwargs):
         """Called in the exception handler for a
-    :class:`requests.RequestException`. Optionally subclass to implement
-    custom error handling, error logging, rate limiting, backoff, or jitter.
+        :class:`requests.RequestException`. Optionally subclass to implement
+        custom error handling, error logging, rate limiting, backoff, or jitter.
 
-    The default implementation logs the error and sleeps for
-    :attr:`gspread_delay` seconds. It does not throw an exception of its own
-    so it keeps retrying failed requests forever.
+        The default implementation logs the error and sleeps for
+        :attr:`gspread_delay` seconds. It does not throw an exception of its own
+        so it keeps retrying failed requests forever.
 
-    gspread throws a :class:`~requests.RequestException` when a socket layer
-    error occurs.
+        gspread throws a :class:`~requests.RequestException` when a socket layer
+        error occurs.
 
-    :param e: Exception object thrown by gspread
-    :type e: :class:`~requests.RequestException`
-    :param method: gspread class method called
-    :param args: positional arguments for the gspread class method
-    :param kwargs: keyword arguments for the gspread class method
-      """
+        :param e: Exception object thrown by gspread
+        :type e: :class:`~requests.RequestException`
+        :param method: gspread class method called
+        :param args: positional arguments for the gspread class method
+        :param kwargs: keyword arguments for the gspread class method
+        """
         # By default, retry forever.
         logging.error(
             "Error while calling {0} {1} {2}. Sleeping for {3} seconds.".format(
@@ -232,12 +232,12 @@ class AsyncioGspreadClientManager(object):
 
     async def delay(self):
         """Called before invoking a :mod:`gspread` class method. Optionally
-    subclass this to implement custom rate limiting.
+        subclass this to implement custom rate limiting.
 
-    The default implementation figures out the delta between the last Google
-    API call and now and sleeps for the delta if it is less than
-    :attr:`gspread_delay`.
-      """
+        The default implementation figures out the delta between the last Google
+        API call and now and sleeps for the delta if it is less than
+        :attr:`gspread_delay`.
+        """
         # Subclass this to customize rate limiting
         now = self._loop.time()
         if self.last_call is None:
@@ -253,15 +253,15 @@ class AsyncioGspreadClientManager(object):
 
     async def authorize(self) -> "AsyncioGspreadClient":
         """(Re)-authenticates an
-    :class:`~gspread_asyncio.AsyncioGspreadClientManager`. You **must**
-    call this method first to log in to the Google Spreadsheets API.
+        :class:`~gspread_asyncio.AsyncioGspreadClientManager`. You **must**
+        call this method first to log in to the Google Spreadsheets API.
 
-    Feel free to call this method often, even in a loop, as it caches
-    Google's credentials and only re-authenticates when the credentials are
-    nearing expiration.
+        Feel free to call this method often, even in a loop, as it caches
+        Google's credentials and only re-authenticates when the credentials are
+        nearing expiration.
 
-    :returns: a ready-to-use :class:`~gspread_asyncio.AsyncioGspreadClient`
-      """
+        :returns: a ready-to-use :class:`~gspread_asyncio.AsyncioGspreadClient`
+        """
         if self._loop is None:
             if PY37:
                 self._loop = asyncio.get_running_loop()
@@ -293,7 +293,7 @@ class AsyncioGspreadClient(object):
     """An :mod:`asyncio` wrapper for :class:`gspread.Client`. You **must**
     obtain instances of this class from
     :meth:`gspread_asyncio.AsyncioGspreadClientManager.authorize`.
-   """
+    """
 
     def __init__(self, agcm: AsyncioGspreadClientManager, gc: gspread.Client):
         self.agcm = agcm
@@ -303,11 +303,11 @@ class AsyncioGspreadClient(object):
 
     async def create(self, title: str) -> "AsyncioGspreadSpreadsheet":
         """Create a new Google Spreadsheet. Wraps
-    :meth:`gspread.Client.create`.
+        :meth:`gspread.Client.create`.
 
-    :param str title: Human-readable name of the new spreadsheet.
-    :rtype: :class:`gspread_asyncio.AsyncioGspreadSpreadsheet`
-      """
+        :param str title: Human-readable name of the new spreadsheet.
+        :rtype: :class:`gspread_asyncio.AsyncioGspreadSpreadsheet`
+        """
         ss = await self.agcm._call(self.gc.create, title)
         ass = AsyncioGspreadSpreadsheet(self.agcm, ss)
         self._ss_cache_title[title] = ass
@@ -317,14 +317,14 @@ class AsyncioGspreadClient(object):
     @_nowait
     async def del_spreadsheet(self, file_id: str):
         """Delete a Google Spreadsheet. Wraps
-    :meth:`gspread.Client.del_spreadsheet`.
+        :meth:`gspread.Client.del_spreadsheet`.
 
-    :param file_id: Google's spreadsheet id
-    :type file_id: str
-    :param nowait: (optional) If true, return a scheduled future
-        instead of waiting for the API call to complete.
-    :type nowait: bool
-      """
+        :param file_id: Google's spreadsheet id
+        :type file_id: str
+        :param nowait: (optional) If true, return a scheduled future
+            instead of waiting for the API call to complete.
+        :type nowait: bool
+        """
         if file_id in self._ss_cache_key:
             del self._ss_cache_key[file_id]
 
@@ -339,16 +339,16 @@ class AsyncioGspreadClient(object):
     @_nowait
     async def import_csv(self, file_id: str, data: str):
         """Upload a csv file and save its data into the first page of the
-    Google Spreadsheet. Wraps :meth:`gspread.Client.import_csv`.
+        Google Spreadsheet. Wraps :meth:`gspread.Client.import_csv`.
 
-    :param file_id: Google's spreadsheet id
-    :type file_id: str
-    :param data: The CSV file
-    :type data: str
-    :param nowait: (optional) If true, return a scheduled future instead
-        of waiting for the API call to complete.
-    :type nowait: bool
-      """
+        :param file_id: Google's spreadsheet id
+        :type file_id: str
+        :param data: The CSV file
+        :type data: str
+        :param nowait: (optional) If true, return a scheduled future instead
+            of waiting for the API call to complete.
+        :type nowait: bool
+        """
         return await self.agcm._call(self.gc.import_csv, file_id, data)
 
     @_nowait
@@ -362,28 +362,28 @@ class AsyncioGspreadClient(object):
         email_message: str = None,
     ):
         """Add new permission to a Google Spreadsheet. Wraps
-    :meth:`gspread.Client.insert_permission`.
+        :meth:`gspread.Client.insert_permission`.
 
-    :param file_id: Google's spreadsheet id
-    :type file_id: str
-    :param value: user or group e-mail address, domain name or None for
-        ‘default’ type.
-    :type value: str, None
-    :param perm_type: Allowed values are:
-        ``user``, ``group``, ``domain``, ``anyone``.
-    :type perm_type: str
-    :param role: the primary role for this user. Allowed values are:
-        ``owner``, ``writer``, ``reader``.
-    :type role: str
-    :param notify: (optional) Whether to send an email to the target
-        user/domain.
-    :type notify: bool
-    :param email_message: (optional) The email to be sent if notify=True
-    :type email_message: str
-    :param nowait: (optional) If true, return a scheduled future instead of
-        waiting for the API call to complete.
-    :type nowait: bool
-      """
+        :param file_id: Google's spreadsheet id
+        :type file_id: str
+        :param value: user or group e-mail address, domain name or None for
+            ‘default’ type.
+        :type value: str, None
+        :param perm_type: Allowed values are:
+            ``user``, ``group``, ``domain``, ``anyone``.
+        :type perm_type: str
+        :param role: the primary role for this user. Allowed values are:
+            ``owner``, ``writer``, ``reader``.
+        :type role: str
+        :param notify: (optional) Whether to send an email to the target
+            user/domain.
+        :type notify: bool
+        :param email_message: (optional) The email to be sent if notify=True
+        :type email_message: str
+        :param nowait: (optional) If true, return a scheduled future instead of
+            waiting for the API call to complete.
+        :type nowait: bool
+        """
         return await self.agcm._call(
             self.gc.insert_permission,
             file_id,
@@ -396,14 +396,14 @@ class AsyncioGspreadClient(object):
 
     async def list_permissions(self, file_id: str):
         """List the permissions of a Google Spreadsheet. Wraps
-    :meth:`gspread.Client.list_permissions`.
+        :meth:`gspread.Client.list_permissions`.
 
-    :param file_id: Google's spreadsheet id
-    :type file_id: str
+        :param file_id: Google's spreadsheet id
+        :type file_id: str
 
-    :returns: Some kind of object with permissions in it. I don't know,
-        the author of gspread forgot to document it.
-      """
+        :returns: Some kind of object with permissions in it. I don't know,
+            the author of gspread forgot to document it.
+        """
         return await self.agcm._call(self.gc.list_permissions, file_id)
 
     async def login(self):
@@ -413,15 +413,15 @@ class AsyncioGspreadClient(object):
 
     async def open(self, title: str) -> "AsyncioGspreadSpreadsheet":
         """Opens a Google Spreadsheet by title. Wraps
-    :meth:`gspread.Client.open`.
+        :meth:`gspread.Client.open`.
 
-    Feel free to call this method often, even in a loop, as it caches the
-    underlying spreadsheet object.
+        Feel free to call this method often, even in a loop, as it caches the
+        underlying spreadsheet object.
 
-    :param title: The title of the spreadsheet
-    :type title: str
-    :rtype: :class:`~gspread_asyncio.AsyncioGspreadSpreadsheet`
-      """
+        :param title: The title of the spreadsheet
+        :type title: str
+        :rtype: :class:`~gspread_asyncio.AsyncioGspreadSpreadsheet`
+        """
         if title in self._ss_cache_title:
             return self._ss_cache_title[title]
         ss = await self.agcm._call(self.gc.open, title)
@@ -432,15 +432,15 @@ class AsyncioGspreadClient(object):
 
     async def open_by_key(self, key: str) -> "AsyncioGspreadSpreadsheet":
         """Opens a Google Spreadsheet by spreasheet id. Wraps
-    :meth:`gspread.Client.open_by_key`.
+        :meth:`gspread.Client.open_by_key`.
 
-    Feel free to call this method often, even in a loop, as it caches
-    the underlying spreadsheet object.
+        Feel free to call this method often, even in a loop, as it caches
+        the underlying spreadsheet object.
 
-    :param key: Google's spreadsheet id
-    :type key: str
-    :rtype: :class:`~gspread_asyncio.AsyncioGspreadSpreadsheet`
-      """
+        :param key: Google's spreadsheet id
+        :type key: str
+        :rtype: :class:`~gspread_asyncio.AsyncioGspreadSpreadsheet`
+        """
         if key in self._ss_cache_key:
             return self._ss_cache_key[key]
         ss = await self.agcm._call(self.gc.open_by_key, key)
@@ -451,15 +451,15 @@ class AsyncioGspreadClient(object):
 
     async def open_by_url(self, url: str) -> "AsyncioGspreadSpreadsheet":
         """Opens a Google Spreadsheet from a URL. Wraps
-    :meth:`gspread.Client.open_by_url`.
+        :meth:`gspread.Client.open_by_url`.
 
-    Feel free to call this method often, even in a loop, as it caches the
-    underlying spreadsheet object.
+        Feel free to call this method often, even in a loop, as it caches the
+        underlying spreadsheet object.
 
-    :param url: URL to a Google Spreadsheet
-    :type url: str
-    :rtype: :class:`~gspread_asyncio.AsyncioGspreadSpreadsheet`
-      """
+        :param url: URL to a Google Spreadsheet
+        :type url: str
+        :rtype: :class:`~gspread_asyncio.AsyncioGspreadSpreadsheet`
+        """
         ss_id = extract_id_from_url(url)
         return await self.open_by_key(ss_id)
 
@@ -467,16 +467,16 @@ class AsyncioGspreadClient(object):
         self, title: Optional[str] = None
     ) -> "List[AsyncioGspreadSpreadsheet]":
         """Open all available spreadsheets. Wraps
-    :meth:`gspread.Client.openall`.
+        :meth:`gspread.Client.openall`.
 
-    Feel free to call this method often, even in a loop, as it caches
-    the underlying spreadsheet objects.
+        Feel free to call this method often, even in a loop, as it caches
+        the underlying spreadsheet objects.
 
-    :param title: (optional) If specified can be used to filter spreadsheets
-        by title.
-    :type title: str
-    :rtype: :py:class:`~typing.List`\\[:class:`~gspread_asyncio.AsyncioGspreadSpreadsheet`\\]
-      """
+        :param title: (optional) If specified can be used to filter spreadsheets
+            by title.
+        :type title: str
+        :rtype: :py:class:`~typing.List`\\[:class:`~gspread_asyncio.AsyncioGspreadSpreadsheet`\\]
+        """
         sses = await self.agcm._call(self.gc.openall, title=title)
         asses = []
         for ss in sses:
@@ -489,16 +489,16 @@ class AsyncioGspreadClient(object):
     @_nowait
     async def remove_permission(self, file_id: str, permission_id: str):
         """Delete permissions from a Google Spreadsheet. Wraps
-    :meth:`gspread.Client.remove_permission`.
+        :meth:`gspread.Client.remove_permission`.
 
-    :param file_id: Google's spreadsheet id
-    :type file_id: str
-    :param permission_id: The permission's id
-    :type permission_id: str
-    :param nowait: (optional) If true, return a scheduled future instead
-        of waiting for the API call to complete.
-    :type nowait: bool
-      """
+        :param file_id: Google's spreadsheet id
+        :type file_id: str
+        :param permission_id: The permission's id
+        :type permission_id: str
+        :param nowait: (optional) If true, return a scheduled future instead
+            of waiting for the API call to complete.
+        :type nowait: bool
+        """
         return await self.agcm._call(self.gc.remove_permission, file_id, permission_id)
 
 
@@ -509,7 +509,7 @@ class AsyncioGspreadSpreadsheet(object):
     :meth:`AsyncioGspreadClient.open_by_key`,
     :meth:`AsyncioGspreadClient.open_by_url`,
     or :meth:`AsyncioGspreadClient.openall`.
-   """
+    """
 
     def __init__(self, agcm, ss: gspread.Spreadsheet):
         self.agcm = agcm
@@ -525,16 +525,16 @@ class AsyncioGspreadSpreadsheet(object):
         self, title: str, rows: int, cols: int
     ) -> "AsyncioGspreadWorksheet":
         """Add new worksheet (tab) to a spreadsheet. Wraps
-    :meth:`gspread.models.Spreadsheet.add_worksheet`.
+        :meth:`gspread.models.Spreadsheet.add_worksheet`.
 
-    :param title: Human-readable title for the new worksheet
-    :type title: str
-    :param rows: Number of rows for the new worksheet
-    :type rows: int
-    :param cols: Number of columns for the new worksheet
-    :type cols: int
-    :rtype: :py:class:`~gspread_asyncio.AsyncioGspreadWorksheet`
-      """
+        :param title: Human-readable title for the new worksheet
+        :type title: str
+        :param rows: Number of rows for the new worksheet
+        :type rows: int
+        :param cols: Number of columns for the new worksheet
+        :type cols: int
+        :rtype: :py:class:`~gspread_asyncio.AsyncioGspreadWorksheet`
+        """
         ws = await self.agcm._call(self.ss.add_worksheet, title, rows, cols)
         aws = AsyncioGspreadWorksheet(self.agcm, ws)
         self._ws_cache_title[ws.title] = aws
@@ -544,14 +544,14 @@ class AsyncioGspreadSpreadsheet(object):
     @_nowait
     async def del_worksheet(self, worksheet: "AsyncioGspreadWorksheet"):
         """Delete a worksheet (tab) from a spreadsheet. Wraps
-    :meth:`gspread.models.Spreadsheet.del_worksheet`.
+        :meth:`gspread.models.Spreadsheet.del_worksheet`.
 
-    :param worksheet: Worksheet to delete
-    :type worksheet: :class:`gspread.models.Worksheet`
-    :param nowait: (optional) If true, return a scheduled future instead
-        of waiting for the API call to complete.
-    :type nowait: bool
-      """
+        :param worksheet: Worksheet to delete
+        :type worksheet: :class:`gspread.models.Worksheet`
+        :param nowait: (optional) If true, return a scheduled future instead
+            of waiting for the API call to complete.
+        :type nowait: bool
+        """
         if worksheet.ws.title in self._ws_cache_title:
             del self._ws_cache_title[worksheet.ws.title]
 
@@ -563,16 +563,16 @@ class AsyncioGspreadSpreadsheet(object):
 
     async def get_worksheet(self, index: int) -> "AsyncioGspreadWorksheet":
         """Retrieves a worksheet (tab) from a spreadsheet by index number.
-    Indexes start from zero. Wraps
-    :meth:`gspread.models.Spreadsheet.get_worksheet`.
+        Indexes start from zero. Wraps
+        :meth:`gspread.models.Spreadsheet.get_worksheet`.
 
-    Feel free to call this method often, even in a loop, as it caches the
-    underlying worksheet object.
+        Feel free to call this method often, even in a loop, as it caches the
+        underlying worksheet object.
 
-    :param index: Index of worksheet
-    :type index: int
-    :rtype: :class:`AsyncioGspreadWorksheet`
-      """
+        :param index: Index of worksheet
+        :type index: int
+        :rtype: :class:`AsyncioGspreadWorksheet`
+        """
         if index in self._ws_cache_idx:
             return self._ws_cache_idx[index]
         ws = await self.agcm._call(self.ss.get_worksheet, index)
@@ -585,32 +585,32 @@ class AsyncioGspreadSpreadsheet(object):
     def id(self) -> str:
         """:returns: Google's spreadsheet id.
 
-    :rtype: str
+        :rtype: str
         """
         return self.ss.id
 
     async def list_permissions(self):
         """List the permissions of a Google Spreadsheet.
-    Wraps :meth:`gspread.models.Spreadsheet.list_permissions`.
+        Wraps :meth:`gspread.models.Spreadsheet.list_permissions`.
 
-    :returns: The gspread author forgot to document this
-      """
+        :returns: The gspread author forgot to document this
+        """
         return await self.agcm._call(self.ss.list_permissions)
 
     @_nowait
     async def remove_permissions(self, value: str, role: str = "any"):
         """Remove permissions from a user or domain. Wraps
-    :meth:`gspread.models.Spreadsheet.remove_permissions`.
+        :meth:`gspread.models.Spreadsheet.remove_permissions`.
 
-    :param value: User or domain to remove permissions from
-    :type value: str
-    :param role: (optional) Permission to remove. Defaults to all
-        permissions.
-    :type role: str
-    :param nowait: (optional) If true, return a scheduled future
-        instead of waiting for the API call to complete.
-    :type nowait: bool
-      """
+        :param value: User or domain to remove permissions from
+        :type value: str
+        :param role: (optional) Permission to remove. Defaults to all
+            permissions.
+        :type role: str
+        :param nowait: (optional) If true, return a scheduled future
+            instead of waiting for the API call to complete.
+        :type nowait: bool
+        """
         return await self.agcm._call(self.ss.remove_permissions, value, role=role)
 
     @_nowait
@@ -623,26 +623,26 @@ class AsyncioGspreadSpreadsheet(object):
         email_message: Optional[str] = None,
     ):
         """Share the spreadsheet with other accounts. Wraps
-    :meth:`gspread.models.Spreadsheet.share`.
+        :meth:`gspread.models.Spreadsheet.share`.
 
-    :param value: user or group e-mail address, domain name
-        or None for 'default' type.
-    :type value: str, None
-    :param perm_type: The account type.
-        Allowed values are:
-        ``user``, ``group``, ``domain``, ``anyone``.
-    :type perm_type: str
-    :param role: The primary role for this user. Allowed values are:
-        ``owner``, ``writer``, ``reader``.
-    :type role: str
-    :param notify: (optional) Whether to send an email to the target
-        user/domain.
-    :type notify: str
-    :param email_message: (optional) The email to be sent if notify=True
-    :type email_message: str
-    :param nowait: (optional) If true, return a scheduled future instead of
-        waiting for the API call to complete.
-    :type nowait: bool
+        :param value: user or group e-mail address, domain name
+            or None for 'default' type.
+        :type value: str, None
+        :param perm_type: The account type.
+            Allowed values are:
+            ``user``, ``group``, ``domain``, ``anyone``.
+        :type perm_type: str
+        :param role: The primary role for this user. Allowed values are:
+            ``owner``, ``writer``, ``reader``.
+        :type role: str
+        :param notify: (optional) Whether to send an email to the target
+            user/domain.
+        :type notify: str
+        :param email_message: (optional) The email to be sent if notify=True
+        :type email_message: str
+        :param nowait: (optional) If true, return a scheduled future instead of
+            waiting for the API call to complete.
+        :type nowait: bool
         """
         return await self.agcm._call(
             self.ss.share,
@@ -656,8 +656,8 @@ class AsyncioGspreadSpreadsheet(object):
     @property
     def sheet1(self) -> str:
         """:returns: Shortcut property for getting the first worksheet.
-    :rtype: str
-      """
+        :rtype: str
+        """
         return self.ss.sheet1
 
     @property
@@ -669,21 +669,21 @@ class AsyncioGspreadSpreadsheet(object):
 
     async def get_title(self) -> str:
         """:returns: Title of the spreadsheet.
-      :rtype: str
-      """
+        :rtype: str
+        """
         return await self.agcm._call(getattr, self.ss, "title")
 
     async def worksheet(self, title: str) -> "AsyncioGspreadWorksheet":
         """Gets a worksheet (tab) by title. Wraps
-    :meth:`gspread.models.Spreadsheet.worksheet`.
+        :meth:`gspread.models.Spreadsheet.worksheet`.
 
-    Feel free to call this method often, even in a loop, as it caches
-    the underlying worksheet object.
+        Feel free to call this method often, even in a loop, as it caches
+        the underlying worksheet object.
 
-    :param title: Human-readable title of the worksheet.
-    :type title: str
-    :rtype: :class:`~gspread_asyncio.AsyncioGspreadWorksheet`
-      """
+        :param title: Human-readable title of the worksheet.
+        :type title: str
+        :rtype: :class:`~gspread_asyncio.AsyncioGspreadWorksheet`
+        """
         if title in self._ws_cache_title:
             return self._ws_cache_title[title]
         ws = await self.agcm._call(self.ss.worksheet, title)
@@ -694,13 +694,13 @@ class AsyncioGspreadSpreadsheet(object):
 
     async def worksheets(self) -> "List[AsyncioGspreadWorksheet]":
         """Gets all worksheets (tabs) in a spreadsheet.
-    Wraps :meth:`gspread.models.Spreadsheet.worksheets`.
+        Wraps :meth:`gspread.models.Spreadsheet.worksheets`.
 
-    Feel free to call this method often, even in a loop, as it caches
-    the underlying worksheet objects.
+        Feel free to call this method often, even in a loop, as it caches
+        the underlying worksheet objects.
 
-    :rtype: :py:class:`~typing.List`\\[:class:`~gspread_asyncio.AsyncioGspreadWorksheet`\\]
-      """
+        :rtype: :py:class:`~typing.List`\\[:class:`~gspread_asyncio.AsyncioGspreadWorksheet`\\]
+        """
         wses = await self.agcm._call(self.ss.worksheets)
         awses = []
         for ws in wses:
@@ -718,7 +718,7 @@ class AsyncioGspreadWorksheet(object):
     :meth:`AsyncioGspreadSpreadsheet.get_worksheet`,
     :meth:`AsyncioGspreadSpreadsheet.worksheet`,
     or :meth:`AsyncioGspreadSpreadsheet.worksheets`.
-   """
+    """
 
     def __init__(self, agcm, ws: gspread.Worksheet):
         self.agcm = agcm
@@ -738,65 +738,65 @@ class AsyncioGspreadWorksheet(object):
         response_date_time_render_option=None,
     ):
         """Sets values in one or more cell ranges of the sheet at
-    once. Wraps :meth:`gspread.models.Worksheet.batch_update`.
+        once. Wraps :meth:`gspread.models.Worksheet.batch_update`.
 
-    :param data: List of dictionaries in the form of
-        `{'range': '...', 'values': [[.., ..], ...]}` where `range`
-        is a target range to update in A1 notation or a named range,
-        and `values` is a list of lists containing new values.
+        :param data: List of dictionaries in the form of
+            `{'range': '...', 'values': [[.., ..], ...]}` where `range`
+            is a target range to update in A1 notation or a named range,
+            and `values` is a list of lists containing new values.
 
-        For input, supported value types are: bool, string, and double.
-        Null values will be skipped. To set a cell to an empty value, set
-        the string value to an empty string.
-    :type data: :py:class:`list`
+            For input, supported value types are: bool, string, and double.
+            Null values will be skipped. To set a cell to an empty value, set
+            the string value to an empty string.
+        :type data: :py:class:`list`
 
-    :param str value_input_option: (optional) How the input data should be
-        interpreted. Possible values are:
+        :param str value_input_option: (optional) How the input data should be
+            interpreted. Possible values are:
 
-        ``RAW``
-            The values the user has entered will not be parsed
-            and will be stored as-is.
+            ``RAW``
+                The values the user has entered will not be parsed
+                and will be stored as-is.
 
-        ``USER_ENTERED``
-            The values will be parsed as if the user typed them
-            into the UI. Numbers will stay as numbers, but
-            strings may be converted to numbers, dates, etc.
-            following the same rules that are applied when
-            entering text into a cell via the Google Sheets UI.
+            ``USER_ENTERED``
+                The values will be parsed as if the user typed them
+                into the UI. Numbers will stay as numbers, but
+                strings may be converted to numbers, dates, etc.
+                following the same rules that are applied when
+                entering text into a cell via the Google Sheets UI.
 
-    :param bool include_values_in_response: (optional) Determines if the
-        update response should include the values of the cells that were
-        updated. By default, responses do not include the updated values.
+        :param bool include_values_in_response: (optional) Determines if the
+            update response should include the values of the cells that were
+            updated. By default, responses do not include the updated values.
 
-    :param str response_value_render_option: (optional) Determines how
-        values in the response should be rendered.
-        See `ValueRenderOption`_ in the Sheets API.
+        :param str response_value_render_option: (optional) Determines how
+            values in the response should be rendered.
+            See `ValueRenderOption`_ in the Sheets API.
 
-    :param str response_date_time_render_option: (optional) Determines how
-        Determines how dates, times, and durations in the response
-        should be rendered. See `DateTimeRenderOption`_ in the Sheets API.
+        :param str response_date_time_render_option: (optional) Determines how
+            Determines how dates, times, and durations in the response
+            should be rendered. See `DateTimeRenderOption`_ in the Sheets API.
 
-    Examples::
+        Examples::
 
-       await worksheet.batch_update([{
-           'range': 'A1:B1',
-           'values': [['42', '43']],
-       }, {
-           'range': 'my_range',
-           'values': [['44', '45']],
-       }, {
-           'range': 'A2:B2',
-           'values': [['42', None]],
-       }])
+           await worksheet.batch_update([{
+               'range': 'A1:B1',
+               'values': [['42', '43']],
+           }, {
+               'range': 'my_range',
+               'values': [['44', '45']],
+           }, {
+               'range': 'A2:B2',
+               'values': [['42', None]],
+           }])
 
-       # Note: named ranges are defined in the scope of
-       # a spreadsheet, so even if `my_range` does not belong to
-       # this sheet it is still updated
+           # Note: named ranges are defined in the scope of
+           # a spreadsheet, so even if `my_range` does not belong to
+           # this sheet it is still updated
 
-    .. versionadded:: 1.1
-    .. _ValueRenderOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueRenderOption
-    .. _DateTimeRenderOption: https://developers.google.com/sheets/api/reference/rest/v4/DateTimeRenderOption
-       """
+        .. versionadded:: 1.1
+        .. _ValueRenderOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueRenderOption
+        .. _DateTimeRenderOption: https://developers.google.com/sheets/api/reference/rest/v4/DateTimeRenderOption
+        """
         return await self.agcm._call(
             self.ws.batch_update,
             data,
@@ -810,17 +810,17 @@ class AsyncioGspreadWorksheet(object):
         self, label: str, value_render_option="FORMATTED_VALUE"
     ) -> gspread.models.Cell:
         """Get cell by label (A1 notation).
-    Wraps :meth:`gspread.models.Worksheet.acell`.
+        Wraps :meth:`gspread.models.Worksheet.acell`.
 
-    :param label: Cell label in A1 notation
-        Letter case is ignored.
-    :type label: str
-    :param value_render_option: (optional) Determines how values should be
-        rendered in the the output. See
-        `ValueRenderOption`_ in the Sheets API.
-    :type value_render_option: str
-    :rtype: :class:`gspread.models.Cell`
-      """
+        :param label: Cell label in A1 notation
+            Letter case is ignored.
+        :type label: str
+        :param value_render_option: (optional) Determines how values should be
+            rendered in the the output. See
+            `ValueRenderOption`_ in the Sheets API.
+        :type value_render_option: str
+        :rtype: :class:`gspread.models.Cell`
+        """
         return await self.agcm._call(
             self.ws.acell, label, value_render_option=value_render_option
         )
@@ -828,46 +828,46 @@ class AsyncioGspreadWorksheet(object):
     @_nowait
     async def add_cols(self, cols: int):
         """Adds columns to worksheet. Wraps
-    :meth:`gspread.models.Worksheet.add_cols`.
+        :meth:`gspread.models.Worksheet.add_cols`.
 
-    :param cols: Number of new columns to add.
-    :type cols: int
-    :param nowait: (optional) If true, return a scheduled future
-        instead of waiting for the API call to complete.
-    :type nowait: bool
-      """
+        :param cols: Number of new columns to add.
+        :type cols: int
+        :param nowait: (optional) If true, return a scheduled future
+            instead of waiting for the API call to complete.
+        :type nowait: bool
+        """
         return await self.agcm._call(self.ws.add_cols, cols)
 
     @_nowait
     async def add_rows(self, rows: int):
         """Adds rows to worksheet. Wraps
-    :meth:`gspread.models.Worksheet.add_rows`.
+        :meth:`gspread.models.Worksheet.add_rows`.
 
-    :param rows: Number of new rows to add.
-    :type rows: int
-    :param nowait: (optional) If true, return a scheduled future instead
-        of waiting for the API call to complete.
-    :type nowait: bool
-      """
+        :param rows: Number of new rows to add.
+        :type rows: int
+        :param nowait: (optional) If true, return a scheduled future instead
+            of waiting for the API call to complete.
+        :type nowait: bool
+        """
         return await self.agcm._call(self.ws.add_rows, rows)
 
     @_nowait
     async def append_row(self, values: List[str], value_input_option: str = "RAW"):
         """Adds a row to the worksheet and populates it with values.
-    Widens the worksheet if there are more values than columns. Wraps
-    :meth:`gspread.models.Worksheet.append_row`.
+        Widens the worksheet if there are more values than columns. Wraps
+        :meth:`gspread.models.Worksheet.append_row`.
 
-    :param values: List of values for the new row.
-    :param value_input_option: (optional) Determines how values should be
-        rendered in the the output. See
-        `ValueInputOption`_ in the Sheets API.
-    :type value_input_option: str
-    :param nowait: (optional) If true, return a scheduled future instead of
-        waiting for the API call to complete.
-    :type nowait: bool
+        :param values: List of values for the new row.
+        :param value_input_option: (optional) Determines how values should be
+            rendered in the the output. See
+            `ValueInputOption`_ in the Sheets API.
+        :type value_input_option: str
+        :param nowait: (optional) If true, return a scheduled future instead of
+            waiting for the API call to complete.
+        :type nowait: bool
 
-    .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
-      """
+        .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
+        """
         return await self.agcm._call(
             self.ws.append_row, values, value_input_option=value_input_option
         )
@@ -882,28 +882,28 @@ class AsyncioGspreadWorksheet(object):
     ):
         """Adds multiple rows to the worksheet and populates them with values.
 
-       Widens the worksheet if there are more values than columns.
+        Widens the worksheet if there are more values than columns.
 
-       NOTE: it doesn't extend the filtered range.
+        NOTE: it doesn't extend the filtered range.
 
-       Wraps :meth:`gspread.models.Worksheet.append_rows`.
+        Wraps :meth:`gspread.models.Worksheet.append_rows`.
 
-       :param list values: List of rows each row is List of values for
-           the new row.
-       :param str value_input_option: (optional) Determines how input data
-           should be interpreted. See `ValueInputOption`_ in the Sheets API.
-       :param str insert_data_option: (optional) Determines how the input data
-           should be inserted. See `InsertDataOption`_ in the Sheets API
-           reference.
-       :param str table_range: (optional) The A1 notation of a range to search
-           for a logical table of data. Values are appended after the last row
-           of the table. Examples: `A1` or `B2:D4`
+        :param list values: List of rows each row is List of values for
+            the new row.
+        :param str value_input_option: (optional) Determines how input data
+            should be interpreted. See `ValueInputOption`_ in the Sheets API.
+        :param str insert_data_option: (optional) Determines how the input data
+            should be inserted. See `InsertDataOption`_ in the Sheets API
+            reference.
+        :param str table_range: (optional) The A1 notation of a range to search
+            for a logical table of data. Values are appended after the last row
+            of the table. Examples: `A1` or `B2:D4`
 
-       .. versionadded:: 1.1
+        .. versionadded:: 1.1
 
-       .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
-       .. _InsertDataOption: https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append#InsertDataOption
-       """
+        .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
+        .. _InsertDataOption: https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append#InsertDataOption
+        """
 
         return await self.agcm._call(
             self.ws.append_rows,
@@ -917,20 +917,20 @@ class AsyncioGspreadWorksheet(object):
         self, row: int, col: int, value_render_option: str = "FORMATTED_VALUE"
     ) -> gspread.models.Cell:
         """Returns an instance of a :class:`gspread.models.Cell` located at
-    `row` and `col` column. Wraps :meth:`gspread.models.Worksheet.cell`.
+        `row` and `col` column. Wraps :meth:`gspread.models.Worksheet.cell`.
 
-    :param row: Row number.
-    :type row: int
-    :param col: Column number.
-    :type col: int
-    :param value_render_option: (optional) Determines how values should be
-        rendered in the the output. See
-        `ValueRenderOption`_ in the Sheets API.
-    :type value_render_option: str
-    :rtype: :class:`gspread.models.Cell`
+        :param row: Row number.
+        :type row: int
+        :param col: Column number.
+        :type col: int
+        :param value_render_option: (optional) Determines how values should be
+            rendered in the the output. See
+            `ValueRenderOption`_ in the Sheets API.
+        :type value_render_option: str
+        :rtype: :class:`gspread.models.Cell`
 
-    .. _ValueRenderOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueRenderOption
-      """
+        .. _ValueRenderOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueRenderOption
+        """
         return await self.agcm._call(
             self.ws.cell, row, col, value_render_option=value_render_option
         )
@@ -938,37 +938,37 @@ class AsyncioGspreadWorksheet(object):
     @_nowait
     async def clear(self):
         """Clears all cells in the worksheet. Wraps
-    :meth:`gspread.models.Worksheet.clear`.
+        :meth:`gspread.models.Worksheet.clear`.
 
-    :param nowait: (optional) If true, return a scheduled future instead
-        of waiting for the API call to complete.
-    :type nowait: bool
-      """
+        :param nowait: (optional) If true, return a scheduled future instead
+            of waiting for the API call to complete.
+        :type nowait: bool
+        """
         return await self.agcm._call(self.ws.clear)
 
     @property
     def col_count(self) -> int:
         """:returns: Number of columns in the worksheet.
-      :rtype: int
-      """
+        :rtype: int
+        """
         return self.ws.col_count
 
     async def col_values(
         self, col, value_render_option="FORMATTED_VALUE"
     ) -> List[Optional[str]]:
         """Returns a list of all values in column `col`. Wraps
-    :meth:`gspread.models.Worksheet.col_values`.
+        :meth:`gspread.models.Worksheet.col_values`.
 
-    Empty cells in this list will be rendered as :const:`None`.
+        Empty cells in this list will be rendered as :const:`None`.
 
-    :param col: Column number.
-    :type col: int
-    :param value_render_option: (optional) Determines how values should be
-        rendered in the the output. See
-        `ValueRenderOption`_ in the Sheets API.
-    :type value_render_option: str
-    :rtype: :py:class:`~typing.List`\\[:py:class:`~typing.Optional`\\[`str`\\]\\]
-      """
+        :param col: Column number.
+        :type col: int
+        :param value_render_option: (optional) Determines how values should be
+            rendered in the the output. See
+            `ValueRenderOption`_ in the Sheets API.
+        :type value_render_option: str
+        :rtype: :py:class:`~typing.List`\\[:py:class:`~typing.Optional`\\[`str`\\]\\]
+        """
         return await self.agcm._call(
             self.ws.col_values, col, value_render_option=value_render_option
         )
@@ -976,30 +976,30 @@ class AsyncioGspreadWorksheet(object):
     @_nowait
     async def delete_row(self, index: int):
         """Deletes the row from the worksheet at the specified index. Wraps
-    :meth:`gspread.models.Worksheet.delete_row`.
+        :meth:`gspread.models.Worksheet.delete_row`.
 
-    :param index: Index of a row for deletion.
-    :type index: int
-    :param nowait: (optional) If true, return a scheduled future instead of
-        waiting for the API call to complete.
-    :type nowait: bool
-      """
+        :param index: Index of a row for deletion.
+        :type index: int
+        :param nowait: (optional) If true, return a scheduled future instead of
+            waiting for the API call to complete.
+        :type nowait: bool
+        """
         return await self.agcm._call(self.ws.delete_rows, index)
 
     @_nowait
     async def delete_rows(self, index: int, end_index: Optional[int] = None):
         """Deletes multiple rows from the worksheet starting at the specified
-    index. Wraps :meth:`gspread.models.Worksheet.delete_rows`.
+        index. Wraps :meth:`gspread.models.Worksheet.delete_rows`.
 
-    :param int index: Index of a row for deletion.
-    :param int end_index: Index of a last row for deletion.
-        When end_index is not specified this method only deletes a single
-        row at ``start_index``.
-    :param nowait: (optional) If true, return a scheduled future instead of
-        waiting for the API call to complete.
-    :type nowait: bool
-    .. versionadded:: 1.2
-      """
+        :param int index: Index of a row for deletion.
+        :param int end_index: Index of a last row for deletion.
+            When end_index is not specified this method only deletes a single
+            row at ``start_index``.
+        :param nowait: (optional) If true, return a scheduled future instead of
+            waiting for the API call to complete.
+        :type nowait: bool
+        .. versionadded:: 1.2
+        """
         return await self.agcm._call(self.ws.delete_rows, index, end_index=end_index)
 
     @_nowait
@@ -1013,33 +1013,33 @@ class AsyncioGspreadWorksheet(object):
         requesting_user_can_edit: Optional[bool] = None,
     ):
         """Add protected range to the sheet. Only the editors can edit
-    the protected range.
+        the protected range.
 
-    :param str name: A string with range value in A1 notation,
-        e.g. 'A1:A5'.
+        :param str name: A string with range value in A1 notation,
+            e.g. 'A1:A5'.
 
-    Alternatively, you may specify numeric boundaries. All values
-    index from 1 (one):
+        Alternatively, you may specify numeric boundaries. All values
+        index from 1 (one):
 
-    :param int first_row: First row number
-    :param int first_col: First column number
-    :param int last_row: Last row number
-    :param int last_col: Last column number
+        :param int first_row: First row number
+        :param int first_col: First column number
+        :param int last_row: Last row number
+        :param int last_col: Last column number
 
-    :param list editor_users_emails: (optional) The email addresses of
-        users with edit access to the protected range.
-    :param list editor_groups_emails: (optional) The email addresses of
-        groups with edit access to the protected range.
-    :param str description: (optional) Description for the protected
-        ranges.
-    :param bool warning_only: (optional) When true this protected range
-        will show a warning when editing. Defaults to ``False``.
-    :param bool requesting_user_can_edit: (optional) True if the user
-        who requested this protected range can edit the protected cells.
-        Defaults to ``False``.
+        :param list editor_users_emails: (optional) The email addresses of
+            users with edit access to the protected range.
+        :param list editor_groups_emails: (optional) The email addresses of
+            groups with edit access to the protected range.
+        :param str description: (optional) Description for the protected
+            ranges.
+        :param bool warning_only: (optional) When true this protected range
+            will show a warning when editing. Defaults to ``False``.
+        :param bool requesting_user_can_edit: (optional) True if the user
+            who requested this protected range can edit the protected cells.
+            Defaults to ``False``.
 
-    .. versionadded:: 1.1
-       """
+        .. versionadded:: 1.1
+        """
         return await self.agcm._call(
             self.ws.add_protected_range,
             name,
@@ -1053,22 +1053,22 @@ class AsyncioGspreadWorksheet(object):
 
     async def find(self, query: "Union[str, re.Pattern]") -> "gspread.Cell":
         """Finds the first cell matching the query. Wraps
-    :meth:`gspread.models.Worksheet.find`.
+        :meth:`gspread.models.Worksheet.find`.
 
-    :param query: A literal string to match or compiled regular expression.
-    :type query: str, :py:class:`re.Pattern`
-    :rtype: :class:`gspread.models.Cell`
-      """
+        :param query: A literal string to match or compiled regular expression.
+        :type query: str, :py:class:`re.Pattern`
+        :rtype: :class:`gspread.models.Cell`
+        """
         return await self.agcm._call(self.ws.find, query)
 
     async def findall(self, query: "Union[str, re.Pattern]") -> List[gspread.Cell]:
         """Finds all cells matching the query. Wraps
-    :meth:`gspread.models.Worksheet.find`.
+        :meth:`gspread.models.Worksheet.find`.
 
-    :param query: A literal string to match or compiled regular expression.
-    :type query: str, :py:class:`re.Pattern`
-    :rtype: :py:class:`~typing.List`\\[:class:`gspread.models.Cell`\\]
-      """
+        :param query: A literal string to match or compiled regular expression.
+        :type query: str, :py:class:`re.Pattern`
+        :rtype: :py:class:`~typing.List`\\[:class:`gspread.models.Cell`\\]
+        """
         return await self.agcm._call(self.ws.findall, query)
 
     async def get_all_records(
@@ -1080,30 +1080,30 @@ class AsyncioGspreadWorksheet(object):
         numericise_ignore: Optional[List[Union[int, str]]] = None,
     ) -> List[dict]:
         """Returns a list of dictionaries, all of them having the contents
-      of the spreadsheet with the head row as keys and each of these
-      dictionaries holding the contents of subsequent rows of cells
-      as values. Wraps :meth:`gspread.models.Worksheet.get_all_records`.
+        of the spreadsheet with the head row as keys and each of these
+        dictionaries holding the contents of subsequent rows of cells
+        as values. Wraps :meth:`gspread.models.Worksheet.get_all_records`.
 
-      Cell values are numericised (strings that can be read as ints
-      or floats are converted).
+        Cell values are numericised (strings that can be read as ints
+        or floats are converted).
 
-      :param empty2zero: (optional) Determines whether empty cells are
-                         converted to zeros.
-      :type empty2zero: bool
-      :param head: (optional) Determines which row to use as keys, starting
-                   from 1 following the numeration of the spreadsheet.
-      :type head: int
-      :param default_blank: (optional) Determines whether empty cells are
-                            converted to something else except empty string
-                            or zero.
-      :type default_blank: str
-      :param bool allow_underscores_in_numeric_literals: (optional) Allow
-           underscores in numeric literals, as introduced in PEP 515
-      :param list numericise_ignore: (optional) List of ints of indices of
-           the row (starting at 1) to ignore numericising, special use
-           of ['all'] to ignore numericising on all columns.
-      :rtype: :class:`~typing.List`\\[:class:`dict`\\]
-      """
+        :param empty2zero: (optional) Determines whether empty cells are
+                           converted to zeros.
+        :type empty2zero: bool
+        :param head: (optional) Determines which row to use as keys, starting
+                     from 1 following the numeration of the spreadsheet.
+        :type head: int
+        :param default_blank: (optional) Determines whether empty cells are
+                              converted to something else except empty string
+                              or zero.
+        :type default_blank: str
+        :param bool allow_underscores_in_numeric_literals: (optional) Allow
+             underscores in numeric literals, as introduced in PEP 515
+        :param list numericise_ignore: (optional) List of ints of indices of
+             the row (starting at 1) to ignore numericising, special use
+             of ['all'] to ignore numericising on all columns.
+        :rtype: :class:`~typing.List`\\[:class:`dict`\\]
+        """
         return await self.agcm._call(
             self.ws.get_all_records,
             empty2zero=empty2zero,
@@ -1115,17 +1115,17 @@ class AsyncioGspreadWorksheet(object):
 
     async def get_all_values(self) -> List[str]:
         """Returns a list of lists containing all cells' values as strings.
-    Wraps :meth:`gspread.models.Worksheet.get_all_values`.
+        Wraps :meth:`gspread.models.Worksheet.get_all_values`.
 
-    :rtype: :class:`~typing.List`\\[:class:`str`\\]
-      """
+        :rtype: :class:`~typing.List`\\[:class:`str`\\]
+        """
         return await self.agcm._call(self.ws.get_all_values)
 
     @property
     def id(self):
         """:returns: Google's spreadsheet id.
-      :rtype: str
-      """
+        :rtype: str
+        """
         return self.ws.id
 
     @_nowait
@@ -1133,23 +1133,23 @@ class AsyncioGspreadWorksheet(object):
         self, values: List, index: int = 1, value_input_option: str = "RAW"
     ):
         """Adds a row to the worksheet at the specified index
-    and populates it with values. Wraps
-    :meth:`gspread.models.Worksheet.insert_row`.
+        and populates it with values. Wraps
+        :meth:`gspread.models.Worksheet.insert_row`.
 
-    Widens the worksheet if there are more values than columns.
+        Widens the worksheet if there are more values than columns.
 
-    :param values: List of values for the new row.
-    :param index: (optional) Offset for the newly inserted row.
-    :type index: int
-    :param value_input_option: (optional) Determines how values should be
-        rendered in the the output. See
-        `ValueInputOption`_ in the Sheets API.
-    :type value_input_option: str
-    :param nowait: (optional) If true, return a scheduled future instead of waiting for the API call to complete.
-    :type nowait: bool
+        :param values: List of values for the new row.
+        :param index: (optional) Offset for the newly inserted row.
+        :type index: int
+        :param value_input_option: (optional) Determines how values should be
+            rendered in the the output. See
+            `ValueInputOption`_ in the Sheets API.
+        :type value_input_option: str
+        :param nowait: (optional) If true, return a scheduled future instead of waiting for the API call to complete.
+        :type nowait: bool
 
-    .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
-      """
+        .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
+        """
         return await self.agcm._call(
             self.ws.insert_row,
             values,
@@ -1162,18 +1162,18 @@ class AsyncioGspreadWorksheet(object):
         self, values: List[List], row: int = 1, value_input_option: str = "RAW"
     ):
         """Adds multiple rows to the worksheet at the specified index and
-    populates them with values.
+        populates them with values.
 
-    :param list values: List of row lists. a list of lists, with the lists
-        each containing one row's values. Widens the worksheet if there are
-        more values than columns.
-    :param int row: Start row to update (one-based). Defaults to 1 (one).
-    :param str value_input_option: (optional) Determines how input data
-        should be interpreted. Possible values are ``RAW`` or
-        ``USER_ENTERED``. See `ValueInputOption`_ in the Sheets API.
+        :param list values: List of row lists. a list of lists, with the lists
+            each containing one row's values. Widens the worksheet if there are
+            more values than columns.
+        :param int row: Start row to update (one-based). Defaults to 1 (one).
+        :param str value_input_option: (optional) Determines how input data
+            should be interpreted. Possible values are ``RAW`` or
+            ``USER_ENTERED``. See `ValueInputOption`_ in the Sheets API.
 
-    .. versionadded:: 1.1
-       """
+        .. versionadded:: 1.1
+        """
         return await self.agcm._call(
             self.ws.insert_rows,
             values,
@@ -1184,60 +1184,60 @@ class AsyncioGspreadWorksheet(object):
 
     async def range(self, *args, **kwargs) -> List[gspread.models.Cell]:
         """Returns a list of :class:`~gspread.models.Cell` objects from a specified
-    range. Wraps :meth:`gspread.models.Worksheet.range`.
+        range. Wraps :meth:`gspread.models.Worksheet.range`.
 
-    :param name: A string with range value in A1 notation, e.g. 'A1:A5'.
-    :type name: str
+        :param name: A string with range value in A1 notation, e.g. 'A1:A5'.
+        :type name: str
 
-    Alternatively, you may specify numeric boundaries. All values
-    index from 1 (one):
+        Alternatively, you may specify numeric boundaries. All values
+        index from 1 (one):
 
-    :param int first_row: Row number
-    :param int first_col: Row number
-    :param int last_row: Row number
-    :param int last_col: Row number
+        :param int first_row: Row number
+        :param int first_col: Row number
+        :param int last_row: Row number
+        :param int last_col: Row number
 
-    :rtype: :class:`~typing.List`\\[:class:`gspread.models.Cell`\\]
-      """
+        :rtype: :class:`~typing.List`\\[:class:`gspread.models.Cell`\\]
+        """
         return await self.agcm._call(self.ws.range, *args, **kwargs)
 
     @_nowait
     async def resize(self, rows: Optional[int] = None, cols: Optional[int] = None):
         """Resizes the worksheet. Specify one of ``rows`` or ``cols``.
-    Wraps :meth:`gspread.models.Worksheet.resize`.
+        Wraps :meth:`gspread.models.Worksheet.resize`.
 
-    :param rows: (optional) New number of rows.
-    :type rows: int
-    :param cols: (optional) New number columns.
-    :type cols: int
-    :param nowait: (optional) If true, return a scheduled future instead of
-        waiting for the API call to complete.
-    :type nowait: bool
-      """
+        :param rows: (optional) New number of rows.
+        :type rows: int
+        :param cols: (optional) New number columns.
+        :type cols: int
+        :param nowait: (optional) If true, return a scheduled future instead of
+            waiting for the API call to complete.
+        :type nowait: bool
+        """
         return await self.agcm._call(self.ws.resize, rows=rows, cols=cols)
 
     @property
     def row_count(self) -> int:
         """:returns: Number of rows in the worksheet.
-      :rtype: int
-      """
+        :rtype: int
+        """
         return self.ws.row_count
 
     async def row_values(
         self, row: int, value_render_option: str = "FORMATTED_VALUE"
     ) -> list:
         """Returns a list of all values in a `row`. Wraps
-    :meth:`gspread.models.Worksheet.row_values`.
+        :meth:`gspread.models.Worksheet.row_values`.
 
-    Empty cells in this list will be rendered as :const:`None`.
+        Empty cells in this list will be rendered as :const:`None`.
 
-    :param int row: Row number.
-    :param str value_render_option: (optional) Determines how values should be
-        rendered in the the output. See
-        `ValueRenderOption`_ in the Sheets API.
+        :param int row: Row number.
+        :param str value_render_option: (optional) Determines how values should be
+            rendered in the the output. See
+            `ValueRenderOption`_ in the Sheets API.
 
-    .. _ValueRenderOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueRenderOption
-      """
+        .. _ValueRenderOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueRenderOption
+        """
         return await self.agcm._call(
             self.ws.row_values, row, value_render_option=value_render_option
         )
@@ -1245,22 +1245,22 @@ class AsyncioGspreadWorksheet(object):
     @property
     def title(self) -> str:
         """:returns: Human-readable worksheet title.
-      :rtype: str
-      """
+        :rtype: str
+        """
         return self.ws.title
 
     @_nowait
     async def update_acell(self, label: str, value):
         """Updates the value of a cell. Wraps
-    :meth:`gspread.models.Worksheet.row_values`.
+        :meth:`gspread.models.Worksheet.row_values`.
 
-    :param str label: Cell label in A1 notation.
-        Letter case is ignored.
-    :param value: New value.
-    :param nowait: (optional) If true, return a scheduled future instead of
-        waiting for the API call to complete.
-    :type nowait: bool
-      """
+        :param str label: Cell label in A1 notation.
+            Letter case is ignored.
+        :param value: New value.
+        :param nowait: (optional) If true, return a scheduled future instead of
+            waiting for the API call to complete.
+        :type nowait: bool
+        """
         row, col = a1_to_rowcol(label)
         return await self.update_cell(row, col, value)
 
@@ -1268,13 +1268,13 @@ class AsyncioGspreadWorksheet(object):
     async def update_cell(self, row: int, col: int, value):
         """Updates the value of a cell.
 
-    :param int row: Row number.
-    :param int col: Column number.
-    :param value: New value.
-    :param nowait: (optional) If true, return a scheduled future
-        instead of waiting for the API call to complete.
-    :type nowait: bool
-      """
+        :param int row: Row number.
+        :param int col: Column number.
+        :param value: New value.
+        :param nowait: (optional) If true, return a scheduled future
+            instead of waiting for the API call to complete.
+        :type nowait: bool
+        """
         return await self.agcm._call(self.ws.update_cell, row, col, value)
 
     @_nowait
@@ -1282,18 +1282,18 @@ class AsyncioGspreadWorksheet(object):
         self, cell_list: List[gspread.models.Cell], value_input_option: str = "RAW"
     ):
         """Updates many cells at once. Wraps
-    :meth:`gspread.models.Worksheet.update_cells`.
+        :meth:`gspread.models.Worksheet.update_cells`.
 
-    :param cell_list: List of :class:`~gspread.models.Cell` objects to update.
-    :param value_input_option: (optional) Determines how values should be
-        rendered in the the output. See
-        `ValueRenderOption`_ in the Sheets API.
-    :type value_input_option: str
-    :param nowait: (optional) If true, return a scheduled future instead of waiting for the API call to complete.
-    :type nowait: bool
+        :param cell_list: List of :class:`~gspread.models.Cell` objects to update.
+        :param value_input_option: (optional) Determines how values should be
+            rendered in the the output. See
+            `ValueRenderOption`_ in the Sheets API.
+        :type value_input_option: str
+        :param nowait: (optional) If true, return a scheduled future instead of waiting for the API call to complete.
+        :type nowait: bool
 
-    .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
-      """
+        .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
+        """
         return await self.agcm._call(
             self.ws.update_cells, cell_list, value_input_option=value_input_option
         )
@@ -1307,28 +1307,28 @@ class AsyncioGspreadWorksheet(object):
     ) -> list:
         """Returns one or more ranges of values from the sheet.
 
-       :param list ranges: List of cell ranges in the A1 notation or named
-           ranges.
+        :param list ranges: List of cell ranges in the A1 notation or named
+            ranges.
 
-       :param str major_dimension: (optional) The major dimension that results
-           should use.
+        :param str major_dimension: (optional) The major dimension that results
+            should use.
 
-       :param str value_render_option: (optional) How values should be
-           represented in the output. The default render option
-           is `FORMATTED_VALUE`.
+        :param str value_render_option: (optional) How values should be
+            represented in the output. The default render option
+            is `FORMATTED_VALUE`.
 
-       :param str date_time_render_option: (optional) How dates, times, and
-           durations should be represented in the output. This is ignored if
-           value_render_option is FORMATTED_VALUE. The default dateTime render
-           option is `SERIAL_NUMBER`.
+        :param str date_time_render_option: (optional) How dates, times, and
+            durations should be represented in the output. This is ignored if
+            value_render_option is FORMATTED_VALUE. The default dateTime render
+            option is `SERIAL_NUMBER`.
 
-       Examples::
+        Examples::
 
-           # Read values from 'A1:B2' range and 'F12' cell
-           await worksheet.batch_get(['A1:B2', 'F12'])
+            # Read values from 'A1:B2' range and 'F12' cell
+            await worksheet.batch_get(['A1:B2', 'F12'])
 
-       .. versionadded:: 1.1
-       """
+        .. versionadded:: 1.1
+        """
         return await self.agcm._call(
             self.ws.batch_get,
             ranges,

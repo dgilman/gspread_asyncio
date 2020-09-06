@@ -30,11 +30,10 @@ def async_test(f):
 
 class Smoketest(unittest.TestCase):
     """Not a real unit test - let's just get some coverage that the thing works ok."""
+
     @async_test
     async def test_smoke(self):
-        agcm = gspread_asyncio.AsyncioGspreadClientManager(
-            get_creds, gspread_delay=3.1
-        )
+        agcm = gspread_asyncio.AsyncioGspreadClientManager(get_creds, gspread_delay=3.1)
 
         agc = await agcm.authorize()
         self.assertIsInstance(agc, gspread_asyncio.AsyncioGspreadClient)
