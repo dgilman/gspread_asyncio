@@ -27,6 +27,8 @@ from oauth2client.service_account import ServiceAccountCredentials
 # gspread_asyncio needs this to re-authenticate when credentials expire.
 
 def get_creds():
+    # To obtain a service account JSON file, follow these steps:
+    # https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account
     return ServiceAccountCredentials.from_json_keyfile_name(
         "serviceacct_spreadsheet.json",
         [
