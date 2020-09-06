@@ -39,5 +39,5 @@ setuptools.setup(
     },
     python_requires=">=3.5",
     packages=setuptools.find_packages(),
-    install_requires=["requests==2.*", "gspread==3.6.*", "oauth2client==4.1.3"],
+    install_requires=["requests==2.*", "gspread==3.6.*"],
 )
