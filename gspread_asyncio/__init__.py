@@ -8,6 +8,7 @@ from typing import (
     TYPE_CHECKING,
     Optional,
     List,
+    Dict,
 )
 
 import gspread
@@ -297,8 +298,8 @@ class AsyncioGspreadClient(object):
     def __init__(self, agcm: AsyncioGspreadClientManager, gc: gspread.Client):
         self.agcm = agcm
         self.gc = gc
-        self._ss_cache_title = {}
-        self._ss_cache_key = {}
+        self._ss_cache_title: Dict[str, "AsyncioGspreadSpreadsheet"] = {}
+        self._ss_cache_key: Dict[str, "AsyncioGspreadSpreadsheet"] = {}
 
     async def create(self, title: str) -> "AsyncioGspreadSpreadsheet":
         """Create a new Google Spreadsheet. Wraps
@@ -326,6 +327,13 @@ class AsyncioGspreadClient(object):
       """
         if file_id in self._ss_cache_key:
             del self._ss_cache_key[file_id]
+
+        titles = [
+            title for title, ss in self._ss_cache_title.items() if ss.id == file_id
+        ]
+        for title in titles:
+            del self._ss_cache_title[title]
+
         return await self.agcm._call(self.gc.del_spreadsheet, file_id)
 
     @_nowait
@@ -507,8 +515,8 @@ class AsyncioGspreadSpreadsheet(object):
         self.agcm = agcm
         self.ss = ss
 
-        self._ws_cache_title = {}
-        self._ws_cache_idx = {}
+        self._ws_cache_title: Dict[str, "AsyncioGspreadWorksheet"] = {}
+        self._ws_cache_idx: Dict[int, "AsyncioGspreadWorksheet"] = {}
 
     def __repr__(self):
         return "<{0} id:{1}>".format(self.__class__.__name__, self.ss.id)
@@ -546,6 +554,11 @@ class AsyncioGspreadSpreadsheet(object):
       """
         if worksheet.ws.title in self._ws_cache_title:
             del self._ws_cache_title[worksheet.ws.title]
+
+        ws_idx = worksheet.ws._properties["index"]
+        if ws_idx in self._ws_cache_idx:
+            del self._ws_cache_idx[ws_idx]
+
         return await self.agcm._call(self.ss.del_worksheet, worksheet.ws)
 
     async def get_worksheet(self, index: int) -> "AsyncioGspreadWorksheet":
