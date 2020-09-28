@@ -2,7 +2,7 @@
 
 An [asyncio wrapper](https://docs.python.org/3/library/asyncio.html) for [burnash's excellent Google Spreadsheet API library](https://github.com/burnash/gspread). `gspread_asyncio` isn't just a plain asyncio wrapper around the `gspread` API, it implements several useful and helpful features on top of those APIs. It's useful for long-running processes and one-off scripts.
 
-Requires Python >= 3.5 because of its use of async/await syntax.
+Requires Python >= 3.6.
 
 [![Documentation Status](https://readthedocs.org/projects/gspread-asyncio/badge/?version=latest)](https://gspread-asyncio.readthedocs.io/en/latest/?badge=latest) [![Build Status](https://travis-ci.org/dgilman/gspread_asyncio.svg?branch=master)](https://travis-ci.org/dgilman/gspread_asyncio)
 
