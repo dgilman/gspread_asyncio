@@ -1112,11 +1112,11 @@ class AsyncioGspreadWorksheet(object):
             numericise_ignore=numericise_ignore,
         )
 
-    async def get_all_values(self) -> List[str]:
+    async def get_all_values(self) -> List[List[str]]:
         """Returns a list of lists containing all cells' values as strings.
         Wraps :meth:`gspread.models.Worksheet.get_all_values`.
 
-        :rtype: :class:`~typing.List`\\[:class:`str`\\]
+        :rtype: :class:`~typing.List`\\[:class:`~typing.List`\\[:class:`str`\\]\\]
         """
         return await self.agcm._call(self.ws.get_all_values)
 
