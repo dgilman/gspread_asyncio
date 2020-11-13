@@ -21,7 +21,9 @@ Requires Python >= 3.6.
 import asyncio
 
 import gspread_asyncio
-from oauth2client.service_account import ServiceAccountCredentials
+
+# from google-auth package
+from google.oauth2.service_account import Credentials 
 
 # First, set up a callback function that fetches our credentials off the disk.
 # gspread_asyncio needs this to re-authenticate when credentials expire.
@@ -29,14 +31,13 @@ from oauth2client.service_account import ServiceAccountCredentials
 def get_creds():
     # To obtain a service account JSON file, follow these steps:
     # https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account
-    return ServiceAccountCredentials.from_json_keyfile_name(
-        "serviceacct_spreadsheet.json",
-        [
-            "https://spreadsheets.google.com/feeds",
-            "https://www.googleapis.com/auth/drive",
-            "https://www.googleapis.com/auth/spreadsheets",
-        ],
-    )
+    creds = Credentials.from_service_account_file("serviceacct_spreadsheet.json")
+    scoped = creds.with_scopes([
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive",
+    ])
+    return scoped
 
 # Create an AsyncioGspreadClientManager object which
 # will give us access to the Spreadsheet API.
