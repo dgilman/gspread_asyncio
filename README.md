@@ -88,3 +88,7 @@ asyncio.run(example(agcm), debug=True)
 ## License
 
 MIT
+
+## Sponsorship
+
+Development of gspread_asyncio is sponsored by [Pro Football History.com, your source for NFL coaching biographies.](https://pro-football-history.com)
