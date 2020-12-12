@@ -4,6 +4,7 @@ import asyncio
 
 import gspread_asyncio
 from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
 
 # N.B. you must use a new password each time you encrypt a new CREDS with openssl.
 # this is to avoid reuse of IVs.
@@ -18,9 +19,21 @@ def get_creds():
     )
 
 
+def get_creds_google_oauth2():
+    creds = Credentials.from_service_account_file(os.environ["CREDS"])
+    scoped = creds.with_scopes(
+        [
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/drive",
+            "https://www.googleapis.com/auth/spreadsheets",
+        ],
+    )
+    return scoped
+
+
 def async_test(f):
     def wrapper(*args, **kwargs):
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
         loop.set_debug(True)
         loop.run_until_complete(f(*args, **kwargs))
         loop.close()
@@ -31,9 +44,8 @@ def async_test(f):
 class Smoketest(unittest.TestCase):
     """Not a real unit test - let's just get some coverage that the thing works ok."""
 
-    @async_test
-    async def test_smoke(self):
-        agcm = gspread_asyncio.AsyncioGspreadClientManager(get_creds, gspread_delay=3.1)
+    async def _test_smoke(self, creds_fn):
+        agcm = gspread_asyncio.AsyncioGspreadClientManager(creds_fn, gspread_delay=3.1)
 
         agc = await agcm.authorize()
         self.assertIsInstance(agc, gspread_asyncio.AsyncioGspreadClient)
@@ -73,3 +85,11 @@ class Smoketest(unittest.TestCase):
 
         self.assertEqual(0, len(agc._ss_cache_key))
         self.assertEqual(0, len(agc._ss_cache_title))
+
+    @async_test
+    async def test_smoke(self):
+        await self._test_smoke(get_creds)
+
+    @async_test
+    async def test_smoke_creds_google_oauth2(self):
+        await self._test_smoke(get_creds_google_oauth2)
