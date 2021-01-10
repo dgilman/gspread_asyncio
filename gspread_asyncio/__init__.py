@@ -300,14 +300,15 @@ class AsyncioGspreadClient(object):
         self._ss_cache_title: "Dict[str, AsyncioGspreadSpreadsheet]" = {}
         self._ss_cache_key: "Dict[str, AsyncioGspreadSpreadsheet]" = {}
 
-    async def create(self, title: str) -> "AsyncioGspreadSpreadsheet":
+    async def create(self, title: str, folder_id: Optional[str] = None) -> "AsyncioGspreadSpreadsheet":
         """Create a new Google Spreadsheet. Wraps
         :meth:`gspread.Client.create`.
 
         :param str title: Human-readable name of the new spreadsheet.
+        :param str folder_id: Id of the folder where we want to save the spreadsheet.
         :rtype: :class:`gspread_asyncio.AsyncioGspreadSpreadsheet`
         """
-        ss = await self.agcm._call(self.gc.create, title)
+        ss = await self.agcm._call(self.gc.create, title, folder_id)
         ass = AsyncioGspreadSpreadsheet(self.agcm, ss)
         self._ss_cache_title[title] = ass
         self._ss_cache_key[ss.id] = ass
