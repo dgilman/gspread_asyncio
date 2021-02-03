@@ -28,6 +28,8 @@ test:
 BLACK_FILES=*.py gspread_asyncio/*.py tests/*.py docs/*.py
 format:
 	black $(BLACK_FILES)
+	isort $(BLACK_FILES)
 
 format-check:
 	black --check $(BLACK_FILES)
+	isort --check $(BLACK_FILES)

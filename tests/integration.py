@@ -1,10 +1,12 @@
-import unittest
-import os
 import asyncio
+import os
+import unittest
+
+from google.oauth2.service_account import Credentials
+from oauth2client.service_account import ServiceAccountCredentials
 
 import gspread_asyncio
-from oauth2client.service_account import ServiceAccountCredentials
-from google.oauth2.service_account import Credentials
+
 
 # N.B. you must use a new password each time you encrypt a new CREDS with openssl.
 # this is to avoid reuse of IVs.
