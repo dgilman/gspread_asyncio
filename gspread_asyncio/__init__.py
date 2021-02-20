@@ -966,10 +966,7 @@ class AsyncioGspreadWorksheet(object):
         .. versionadded:: 1.4
         """
 
-        return await self.agcm._call(
-            self.ws.clear_note,
-            cell
-        )
+        return await self.agcm._call(self.ws.clear_note, cell)
 
     @property
     def col_count(self) -> int:
@@ -1164,7 +1161,9 @@ class AsyncioGspreadWorksheet(object):
         return self.ws.id
 
     @_nowait
-    async def insert_cols(self, values: List[List], col: int = 1, value_input_option: str = "RAW"):
+    async def insert_cols(
+        self, values: List[List], col: int = 1, value_input_option: str = "RAW"
+    ):
         """Adds multiple new cols to the worksheet at specified index and
         populates them with values. Wraps
         :meth:`gspread.models.Worksheet.insert_cols`.
@@ -1219,11 +1218,7 @@ class AsyncioGspreadWorksheet(object):
 
         .. versionadded:: 1.4
         """
-        return await self.agcm._call(
-            self.ws.insert_note,
-            cell,
-            content
-        )
+        return await self.agcm._call(self.ws.insert_note, cell, content)
 
     @_nowait
     async def insert_row(
@@ -1410,11 +1405,7 @@ class AsyncioGspreadWorksheet(object):
 
         .. versionadded:: 1.4
         """
-        return await self.agcp._call(
-            self.ws.update_note,
-            cell,
-            content
-        )
+        return await self.agcp._call(self.ws.update_note, cell, content)
 
     async def batch_get(
         self,
