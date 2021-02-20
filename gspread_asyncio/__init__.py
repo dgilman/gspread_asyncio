@@ -941,6 +941,36 @@ class AsyncioGspreadWorksheet(object):
         """
         return await self.agcm._call(self.ws.clear)
 
+    @_nowait
+    async def clear_note(self, cell: str):
+        """Clear a note. The note is attached to a certain cell.
+
+        :param cell: A string with a cell coordinates in A1 notation,
+            e.g. 'D7'.
+        :type cell: str
+
+        Alternatively, you may specify numeric boundaries. All values
+        index from 1 (one):
+
+        :param int first_row: First row number
+        :param int first_col: First column number
+        :param int last_row: Last row number
+        :param int last_col: Last column number
+
+        For both A1 and numeric notation:
+
+        :param nowait: (optional) If true, return a scheduled future instead
+            of waiting for the API call to complete.
+        :type nowait: bool
+
+        .. versionadded:: 1.4
+        """
+
+        return await self.agcm._call(
+            self.ws.clear_note,
+            cell
+        )
+
     @property
     def col_count(self) -> int:
         """:returns: Number of columns in the worksheet.
@@ -1021,6 +1051,8 @@ class AsyncioGspreadWorksheet(object):
         :param int first_col: First column number
         :param int last_row: Last row number
         :param int last_col: Last column number
+
+        For both A1 and numeric notation:
 
         :param list editor_users_emails: (optional) The email addresses of
             users with edit access to the protected range.
@@ -1156,6 +1188,41 @@ class AsyncioGspreadWorksheet(object):
             values,
             col=col,
             value_input_option=value_input_option,
+        )
+
+    @_nowait
+    async def insert_note(self, cell: str, content: str) -> None:
+        """Insert a note. The note is attached to a certain cell.
+
+        :param cell: A string with a cell coordinates in A1 notation,
+            e.g. 'D7'.
+        :type cell: str
+
+        Alternatively, you may specify numeric boundaries. All values
+        index from 1 (one):
+
+        :param first_row: First row number
+        :type first_row: int
+        :param first_col: First column number
+        :type first_col: int
+        :param last_row: Last row number
+        :type last_row: int
+        :param last_col: Last column number
+        :type last_col: int
+
+        For both A1 and numeric notation:
+
+        :param content: The text note to insert.
+        :type note: int
+        :param nowait: (optional) If true, return a scheduled future instead of waiting for the API call to complete.
+        :type nowait: bool
+
+        .. versionadded:: 1.4
+        """
+        return await self.agcm._call(
+            self.ws.insert_note,
+            cell,
+            content
         )
 
     @_nowait
@@ -1328,6 +1395,25 @@ class AsyncioGspreadWorksheet(object):
         """
         return await self.agcm._call(
             self.ws.update_cells, cell_list, value_input_option=value_input_option
+        )
+
+    @_nowait
+    async def update_note(self, cell: str, content: str) -> None:
+        """Update the content of the note located at `cell`.
+
+        :param cell: A string with cell coordinates in A1 notation, e.g. 'D7'.
+        :type cell: str
+        :param content: The text note to insert.
+        :type content: str
+        :param nowait: (optional) If true, return a scheduled future instead of waiting for the API call to complete.
+        :type nowait: bool
+
+        .. versionadded:: 1.4
+        """
+        return await self.agcp._call(
+            self.ws.update_note,
+            cell,
+            content
         )
 
     async def batch_get(
