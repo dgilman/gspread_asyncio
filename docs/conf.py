@@ -14,14 +14,17 @@
 #
 import os
 import sys
+import datetime
 
 sys.path.insert(0, os.path.abspath(".."))
 
 
+TODAY = datetime.date.today()
+
 # -- Project information -----------------------------------------------------
 
 project = "gspread_asyncio"
-copyright = "2018, David Gilman"
+copyright = f"{TODAY.year}, David Gilman"
 author = "David Gilman"
 
 # The short X.Y version
