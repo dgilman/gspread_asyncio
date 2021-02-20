@@ -1074,6 +1074,7 @@ class AsyncioGspreadWorksheet(object):
         default_blank: str = "",
         allow_underscores_in_numeric_literals: bool = False,
         numericise_ignore: Optional[List[Union[int, str]]] = None,
+        value_render_option: Optional[str] = None,
     ) -> List[dict]:
         """Returns a list of dictionaries, all of them having the contents
         of the spreadsheet with the head row as keys and each of these
@@ -1098,7 +1099,12 @@ class AsyncioGspreadWorksheet(object):
         :param list numericise_ignore: (optional) List of ints of indices of
              the row (starting at 1) to ignore numericising, special use
              of ['all'] to ignore numericising on all columns.
+        :param str value_render_option: (optional) Determines how values should be
+            rendered in the the output. See
+            `ValueRenderOption`_ in the Sheets API.
         :rtype: :class:`~typing.List`\\[:class:`dict`\\]
+
+        .. _ValueRenderOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueRenderOption
         """
         return await self.agcm._call(
             self.ws.get_all_records,
@@ -1107,6 +1113,7 @@ class AsyncioGspreadWorksheet(object):
             default_blank=default_blank,
             allow_underscores_in_numeric_literals=allow_underscores_in_numeric_literals,
             numericise_ignore=numericise_ignore,
+            value_render_option=value_render_option,
         )
 
     async def get_all_values(self) -> List[List[str]]:
@@ -1125,6 +1132,33 @@ class AsyncioGspreadWorksheet(object):
         return self.ws.id
 
     @_nowait
+    async def insert_cols(self, values: List[List], col: int = 1, value_input_option: str = "RAW"):
+        """Adds multiple new cols to the worksheet at specified index and
+        populates them with values. Wraps
+        :meth:`gspread.models.Worksheet.insert_cols`.
+
+        :param values: List of values for the new columns.
+        :type values: :class:`~typing.List`\\[:class:`~typing.List`\\]
+        :param col: (optional) Offset for the newly inserted columns.
+        :type index: int
+        :param value_input_option: (optional) Determines how values should be
+            rendered in the the output. Possible values are ``RAW`` or
+            ``USER_ENTERED``. See `ValueInputOption`_ in the Sheets API.
+        :type value_input_option: str
+        :param nowait: (optional) If true, return a scheduled future instead of waiting for the API call to complete.
+        :type nowait: bool
+
+        .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
+        .. versionadded:: 1.4
+        """
+        return await self.agcm._call(
+            self.ws.insert_cols,
+            values,
+            col=col,
+            value_input_option=value_input_option,
+        )
+
+    @_nowait
     async def insert_row(
         self, values: List, index: int = 1, value_input_option: str = "RAW"
     ):
@@ -1135,6 +1169,7 @@ class AsyncioGspreadWorksheet(object):
         Widens the worksheet if there are more values than columns.
 
         :param values: List of values for the new row.
+        :type values: :class:`~typing.List`
         :param index: (optional) Offset for the newly inserted row.
         :type index: int
         :param value_input_option: (optional) Determines how values should be
@@ -1163,6 +1198,7 @@ class AsyncioGspreadWorksheet(object):
         :param list values: List of row lists. a list of lists, with the lists
             each containing one row's values. Widens the worksheet if there are
             more values than columns.
+        :type values: :class:`~typing.List`\\[:class:`~typing.List`\\]
         :param int row: Start row to update (one-based). Defaults to 1 (one).
         :param str value_input_option: (optional) Determines how input data
             should be interpreted. Possible values are ``RAW`` or
