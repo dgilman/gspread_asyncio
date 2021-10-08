@@ -1393,6 +1393,28 @@ class AsyncioGspreadWorksheet(object):
         )
 
     @_nowait
+    async def update(
+            self, range_name: str, values: List[List], value_input_option: str = "RAW"
+    ):
+        """Updates many cells at once. Wraps
+        :meth:`gspread.models.Worksheet.update`.
+
+        :param cell_list: string representing range name,
+        :param valuse: list of list of values to update
+        :param value_input_option: (optional) Determines how values should be
+            rendered in the the output. See
+            `ValueRenderOption`_ in the Sheets API.
+        :type value_input_option: str
+        :param nowait: (optional) If true, return a scheduled future instead of waiting for the API call to complete.
+        :type nowait: bool
+
+        .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
+        """
+        return await self.agcm._call(
+            self.ws.update, range_name, values, value_input_option=value_input_option
+        )
+
+    @_nowait
     async def update_note(self, cell: str, content: str) -> None:
         """Update the content of the note located at `cell`.
 
