@@ -1399,14 +1399,17 @@ class AsyncioGspreadWorksheet(object):
         """Updates many cells at once. Wraps
         :meth:`gspread.models.Worksheet.update`.
 
-        :param cell_list: string representing range name,
-        :param valuse: list of list of values to update
-        :param value_input_option: (optional) Determines how values should be
-            rendered in the the output. See
-            `ValueRenderOption`_ in the Sheets API.
-        :type value_input_option: str
-        :param nowait: (optional) If true, return a scheduled future instead of waiting for the API call to complete.
-        :type nowait: bool
+	:param str range_name: The A1 notation of the values
+            to update.
+        :param list values: The data to be written.
+        :param bool raw: The values will not be parsed by Sheets API and will
+            be stored as-is. For example, formulas will be rendered as plain
+            strings. Defaults to ``True``. This is a shortcut for
+            the ``value_input_option`` parameter.
+        :param str major_dimension: (optional) The major dimension of the
+            values. Either ``ROWS`` or ``COLUMNS``.
+        :param str value_input_option: (optional) How the input data should be
+            interpreted. Possible values are:
 
         .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
         """
