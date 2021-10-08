@@ -3,6 +3,7 @@ dist
 *.egg-info
 __pycache__
 
+env
 venv
 version_tag
 wheeltest
