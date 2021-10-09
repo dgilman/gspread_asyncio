@@ -870,7 +870,7 @@ class AsyncioGspreadWorksheet(object):
     @_nowait
     async def append_rows(
         self,
-        values: List[str],
+        values: List[List[str]],
         value_input_option: str = "RAW",
         insert_data_option: Optional[str] = None,
         table_range: Optional[str] = None,
