@@ -1436,27 +1436,48 @@ class AsyncioGspreadWorksheet(object):
 
     @_nowait
     async def update(
-            self, range_name: str, values: List[List], value_input_option: str = "RAW"
+        self,
+        range_name: str,
+        values: List[List],
+        raw=True,
+        major_dimension: Optional[str] = None,
+        value_input_option: str = "RAW",
     ):
-        """Updates many cells at once. Wraps
+        """Sets values in a cell range of the sheet. Wraps
         :meth:`gspread.models.Worksheet.update`.
 
-	:param str range_name: The A1 notation of the values
-            to update.
+        :param str range_name: The A1 notation of the values
+             to update.
         :param list values: The data to be written.
         :param bool raw: The values will not be parsed by Sheets API and will
-            be stored as-is. For example, formulas will be rendered as plain
-            strings. Defaults to ``True``. This is a shortcut for
-            the ``value_input_option`` parameter.
+             be stored as-is. For example, formulas will be rendered as plain
+             strings. Defaults to ``True``. This is a shortcut for
+             the ``value_input_option`` parameter.
         :param str major_dimension: (optional) The major dimension of the
-            values. Either ``ROWS`` or ``COLUMNS``.
+             values. Either ``ROWS`` or ``COLUMNS``.
         :param str value_input_option: (optional) How the input data should be
-            interpreted. Possible values are:
+             interpreted. Possible values are:
 
-        .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
+             ``RAW``
+                  The values the user has entered will not be parsed and will be
+                  stored as-is.
+             ``USER_ENTERED``
+                  The values will be parsed as if the user typed them into the
+                  UI. Numbers will stay as numbers, but strings may be converted
+                  to numbers, dates, etc. following the same rules that are
+                  applied when entering text into a cell via
+                  the Google Sheets UI.
+        :param bool nowait: (optional) If true, return a scheduled future instead of waiting for the API call to complete.
+
+        .. versionadded:: 1.5
         """
         return await self.agcm._call(
-            self.ws.update, range_name, values, value_input_option=value_input_option
+            self.ws.update,
+            range_name,
+            values,
+            raw=raw,
+            major_dimension=major_dimension,
+            value_input_option=value_input_option,
         )
 
     @_nowait
