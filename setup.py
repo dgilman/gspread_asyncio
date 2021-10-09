@@ -39,5 +39,5 @@ setuptools.setup(
     },
     python_requires=">=3.6",
     packages=setuptools.find_packages(),
-    install_requires=["requests==2.*", "gspread==3.7.*"],
+    install_requires=["requests==2.*", "gspread==4.0.*"],
 )
