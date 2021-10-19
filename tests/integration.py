@@ -78,6 +78,8 @@ class Smoketest(unittest.TestCase):
                 cell = await ws.cell(row, col)
                 self.assertEqual(cell.value, val)
 
+        self.assertEqual(await ws.get_values(), [['1/1', '1/2'], ['2/1', '2/2']])
+
         await ss.del_worksheet(ws)
         self.assertEqual(0, len(ss._ws_cache_idx))
         self.assertEqual(0, len(ss._ws_cache_title))
