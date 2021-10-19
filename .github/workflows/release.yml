@@ -23,6 +23,8 @@ jobs:
           pip install
           build
           --user
+      - name: Create tag file
+        run: make version-tag
       - name: Build a binary wheel and a source tarball
         run: >-
           python -m
