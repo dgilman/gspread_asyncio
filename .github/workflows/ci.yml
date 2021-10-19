@@ -1,0 +1,47 @@
+name: ci
+on: [push]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.9' ]
+    name: Lint
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+      - name: install-format
+        run: make black-install
+      - name: format-check
+        run: make format-check
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      matrix:
+        python-version: [ '3.6', '3.7', '3.8', '3.9', '3.10']
+    name: Python ${{ matrix.python-version }} test run
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+      - name: install
+        run: make travis-install
+      - name: install age
+        run: wget https://github.com/FiloSottile/age/releases/download/v1.0.0/age-v1.0.0-linux-amd64.tar.gz && tar xf age-v1.0.0-linux-amd64.tar.gz
+      - name: decrypt keys
+        env:
+          AGE_KEY: ${{ secrets.AGE_KEY }}
+        run: make decrypt-test-files
+      - name: test
+        run: make test
+      - name: docs
+        run: make docs

@@ -1,7 +1,6 @@
 travis-install:
 	pip install -r docs/requirements.txt
 	pip install -r tests/requirements.txt
-	openssl aes-256-cbc -d -md rmd160 -pass pass:$(OPENSSL_PASS) -in tests/creds.json.enc -out tests/creds.json
 	cp tests/.env.example tests/.env
 
 black-install:
@@ -10,16 +9,16 @@ black-install:
 version-tag:
 	git describe --tags > version_tag
 
-wheel: version-tag
-	python setup.py sdist bdist_wheel
-
-travis-script: wheel
-	pip install dist/gspread_asyncio*.whl
+docs:
 	cd docs && $(MAKE) html
 
 # I use this locally to encrypt the creds.json
 encrypt-test-files:
-	openssl aes-256-cbc -md rmd160 -pass pass:$(OPENSSL_PASS) -in tests/creds.json -out tests/creds.json.enc
+	age -r age1ajzzxt7ey6gxkfjcynw2tnwd95gggcz7t5jmt2pr8jga54tl39rsdxy9fn -o tests/creds.json.age tests/creds.json
+
+decrypt-test-files:
+	echo "$(AGE_KEY)" > tests/age_key.txt
+	./age/age --decrypt -i tests/age_key.txt -o tests/creds.json tests/creds.json.age
 
 # You can use this to run the tests locally
 test:
