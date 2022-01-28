@@ -210,8 +210,8 @@ epub_exclude_files = ["search.html"]
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "oauth2client": ("https://oauth2client.readthedocs.io/en/latest/", None),
-    "gspread": ("https://gspread.readthedocs.io/en/latest/", None),
-    "requests": ("https://requests.readthedocs.io/en/master/", None),
+    "gspread": ("https://docs.gspread.org/en/latest/", None),
+    "requests": ("https://docs.python-requests.org/en/master/", None),
     "google-auth": ("https://google-auth.readthedocs.io/en/latest/", None),
 }
 
