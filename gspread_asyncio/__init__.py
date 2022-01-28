@@ -274,7 +274,7 @@ class AsyncioGspreadClientManager(object):
             gc = await self._loop.run_in_executor(None, gspread.authorize, creds)
             agc = AsyncioGspreadClient(self, gc)
             self._agc_cache[now] = agc
-            if self.auth_time in self._agc_cache:
+            if self.auth_time is not None and self.auth_time in self._agc_cache:
                 del self._agc_cache[self.auth_time]
             self.auth_time = now
         else:
@@ -352,6 +352,7 @@ class AsyncioGspreadClient(object):
         role: str,
         notify: bool = True,
         email_message: str = None,
+        with_link: bool = False,
     ):
         """Add new permission to a Google Spreadsheet. Wraps
         :meth:`gspread.Client.insert_permission`.
@@ -367,6 +368,8 @@ class AsyncioGspreadClient(object):
         :param bool notify: (optional) Whether to send an email to the target
             user/domain.
         :param str email_message: (optional) The email to be sent if notify=True
+        :param bool with_link: (optional) Whether the link is required for this
+            permission to be active.
         :param bool nowait: (optional) If true, return a scheduled future instead of
             waiting for the API call to complete.
         """
@@ -378,6 +381,7 @@ class AsyncioGspreadClient(object):
             role,
             notify=notify,
             email_message=email_message,
+            with_link=with_link,
         )
 
     async def list_permissions(self, file_id: str):
@@ -500,7 +504,7 @@ class AsyncioGspreadSpreadsheet(object):
         return "<{0} id:{1}>".format(self.__class__.__name__, self.ss.id)
 
     async def add_worksheet(
-        self, title: str, rows: int, cols: int
+        self, title: str, rows: int, cols: int, index: Optional[int] = None
     ) -> "AsyncioGspreadWorksheet":
         """Add new worksheet (tab) to a spreadsheet. Wraps
         :meth:`gspread.models.Spreadsheet.add_worksheet`.
@@ -508,9 +512,12 @@ class AsyncioGspreadSpreadsheet(object):
         :param str title: Human-readable title for the new worksheet
         :param int rows: Number of rows for the new worksheet
         :param int cols: Number of columns for the new worksheet
+        :param int index: (optional) Position of the sheet
         :rtype: :py:class:`~gspread_asyncio.AsyncioGspreadWorksheet`
         """
-        ws = await self.agcm._call(self.ss.add_worksheet, title, rows, cols)
+        ws = await self.agcm._call(
+            self.ss.add_worksheet, title, rows, cols, index=index
+        )
         aws = AsyncioGspreadWorksheet(self.agcm, ws)
         self._ws_cache_title[ws.title] = aws
         self._ws_cache_idx[ws._properties["index"]] = aws
@@ -610,6 +617,7 @@ class AsyncioGspreadSpreadsheet(object):
         role,
         notify: bool = True,
         email_message: Optional[str] = None,
+        with_link=False,
     ):
         """Share the spreadsheet with other accounts. Wraps
         :meth:`gspread.models.Spreadsheet.share`.
@@ -625,6 +633,7 @@ class AsyncioGspreadSpreadsheet(object):
         :param str notify: (optional) Whether to send an email to the target
             user/domain.
         :param str email_message: (optional) The email to be sent if notify=True
+        :param bool with_link: (optional) Whether the link is required for this permission
         :param bool nowait: (optional) If true, return a scheduled future instead of
             waiting for the API call to complete.
         """
@@ -635,6 +644,7 @@ class AsyncioGspreadSpreadsheet(object):
             role,
             notify=notify,
             email_message=email_message,
+            with_link=with_link,
         )
 
     @property
@@ -712,6 +722,7 @@ class AsyncioGspreadWorksheet(object):
     async def batch_update(
         self,
         data,
+        raw=True,
         value_input_option=None,
         include_values_in_response=None,
         response_value_render_option=None,
@@ -729,6 +740,8 @@ class AsyncioGspreadWorksheet(object):
             Null values will be skipped. To set a cell to an empty value, set
             the string value to an empty string.
         :type data: :py:class:`list`
+
+        :param bool raw: (optional) Force value_input_option="RAW"
 
         :param str value_input_option: (optional) How the input data should be
             interpreted. Possible values are:
@@ -780,6 +793,7 @@ class AsyncioGspreadWorksheet(object):
         return await self.agcm._call(
             self.ws.batch_update,
             data,
+            raw=raw,
             value_input_option=value_input_option,
             include_values_in_response=include_values_in_response,
             response_value_render_option=response_value_render_option,
@@ -828,7 +842,13 @@ class AsyncioGspreadWorksheet(object):
         return await self.agcm._call(self.ws.add_rows, rows)
 
     @_nowait
-    async def append_row(self, values: List[str], value_input_option: str = "RAW"):
+    async def append_row(
+        self,
+        values: List[str],
+        value_input_option: str = "RAW",
+        insert_data_option=None,
+        table_range=None,
+    ):
         """Adds a row to the worksheet and populates it with values.
         Widens the worksheet if there are more values than columns. Wraps
         :meth:`gspread.models.Worksheet.append_row`.
@@ -838,13 +858,23 @@ class AsyncioGspreadWorksheet(object):
         :param str value_input_option: (optional) Determines how values should be
             rendered in the the output. See
             `ValueInputOption`_ in the Sheets API.
+        :param str insert_data_option: (optional) Determines how the input data
+            should be inserted. See `InsertDataOption`_ in the Sheets API
+            reference.
+        :param str table_range: (optional) The A1 notation of a range to search
+            for a logical table of data. Values are appended after the last row
+            of the table. Examples: ``A1`` or ``B2:D4``
         :param bool nowait: (optional) If true, return a scheduled future instead of
             waiting for the API call to complete.
 
         .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
         """
         return await self.agcm._call(
-            self.ws.append_row, values, value_input_option=value_input_option
+            self.ws.append_row,
+            values,
+            value_input_option=value_input_option,
+            insert_data_option=insert_data_option,
+            table_range=table_range,
         )
 
     @_nowait
@@ -1021,8 +1051,8 @@ class AsyncioGspreadWorksheet(object):
         editor_users_emails: Optional[List[str]] = None,
         editor_groups_emails: Optional[List[str]] = None,
         description: Optional[str] = None,
-        warning_only: Optional[bool] = None,
-        requesting_user_can_edit: Optional[bool] = None,
+        warning_only: Optional[bool] = False,
+        requesting_user_can_edit: Optional[bool] = False,
     ):
         """Add protected range to the sheet. Only the editors can edit
         the protected range.
@@ -1067,25 +1097,44 @@ class AsyncioGspreadWorksheet(object):
             api_call_count=2,
         )
 
-    async def find(self, query: "Union[str, re.Pattern]") -> "gspread.Cell":
+    async def find(
+        self,
+        query: "Union[str, re.Pattern]",
+        in_row: Optional[int] = None,
+        in_column: Optional[int] = None,
+    ) -> "gspread.Cell":
         """Finds the first cell matching the query. Wraps
         :meth:`gspread.models.Worksheet.find`.
 
         :param query: A literal string to match or compiled regular expression.
         :type query: str, :py:class:`re.Pattern`
+        :param int in_row: (optional) One-based row number to scope the search.
+        :param int in_column: (optional) One-based column number to scope
+            the search.
         :rtype: :class:`gspread.models.Cell`
         """
-        return await self.agcm._call(self.ws.find, query)
+        return await self.agcm._call(
+            self.ws.find, query, in_row=in_row, in_column=in_column
+        )
 
-    async def findall(self, query: "Union[str, re.Pattern]") -> List[gspread.Cell]:
+    async def findall(
+        self,
+        query: "Union[str, re.Pattern]",
+        in_row: Optional[int] = None,
+        in_column: Optional[int] = None,
+    ) -> List[gspread.Cell]:
         """Finds all cells matching the query. Wraps
         :meth:`gspread.models.Worksheet.find`.
 
         :param query: A literal string to match or compiled regular expression.
         :type query: str, :py:class:`re.Pattern`
+        :param int in_row: (optional) One-based row number to scope the search.
+        :param int in_column: (optional) One-based column number to scope
         :rtype: :py:class:`~typing.List`\\[:class:`gspread.models.Cell`\\]
         """
-        return await self.agcm._call(self.ws.findall, query)
+        return await self.agcm._call(
+            self.ws.findall, query, in_row=in_row, in_column=in_column
+        )
 
     async def get_all_records(
         self,
@@ -1212,7 +1261,7 @@ class AsyncioGspreadWorksheet(object):
         )
 
     @property
-    def id(self):
+    def id(self) -> str:
         """:returns: Google's spreadsheet id.
         :rtype: str
         """
@@ -1364,7 +1413,11 @@ class AsyncioGspreadWorksheet(object):
         return self.ws.row_count
 
     async def row_values(
-        self, row: int, value_render_option: str = "FORMATTED_VALUE"
+        self,
+        row: int,
+        major_dimension=None,
+        value_render_option: Optional[str] = None,
+        date_time_render_option=None,
     ) -> list:
         """Returns a list of all values in a `row`. Wraps
         :meth:`gspread.models.Worksheet.row_values`.
@@ -1379,7 +1432,11 @@ class AsyncioGspreadWorksheet(object):
         .. _ValueRenderOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueRenderOption
         """
         return await self.agcm._call(
-            self.ws.row_values, row, value_render_option=value_render_option
+            self.ws.row_values,
+            row,
+            major_dimension=major_dimension,
+            value_render_option=value_render_option,
+            date_time_render_option=date_time_render_option,
         )
 
     @property
@@ -1441,7 +1498,10 @@ class AsyncioGspreadWorksheet(object):
         values: List[List],
         raw=True,
         major_dimension: Optional[str] = None,
-        value_input_option: str = "RAW",
+        value_input_option: Optional[str] = None,
+        include_values_in_response=None,
+        response_value_render_option=None,
+        response_date_time_render_option=None,
     ):
         """Sets values in a cell range of the sheet. Wraps
         :meth:`gspread.models.Worksheet.update`.
@@ -1478,6 +1538,9 @@ class AsyncioGspreadWorksheet(object):
             raw=raw,
             major_dimension=major_dimension,
             value_input_option=value_input_option,
+            include_values_in_response=include_values_in_response,
+            response_value_render_option=response_value_render_option,
+            response_date_time_render_option=response_date_time_render_option,
         )
 
     @_nowait
@@ -1490,7 +1553,7 @@ class AsyncioGspreadWorksheet(object):
 
         .. versionadded:: 1.4
         """
-        return await self.agcp._call(self.ws.update_note, cell, content)
+        return await self.agcm._call(self.ws.update_note, cell, content)
 
     async def batch_get(
         self,
