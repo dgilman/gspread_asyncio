@@ -1062,7 +1062,9 @@ class AsyncioGspreadWorksheet(object):
         return "<{0} id:{1}>".format(self.__class__.__name__, self.ws.id)
 
     async def acell(
-        self, label: str, value_render_option: gspread.utils.ValueRenderOption = gspread.utils.ValueRenderOption.formatted
+        self,
+        label: str,
+        value_render_option: gspread.utils.ValueRenderOption = gspread.utils.ValueRenderOption.formatted,
     ) -> gspread.Cell:
         """Get cell by label (A1 notation).
         Wraps :meth:`gspread.Worksheet.acell`.
@@ -1447,7 +1449,10 @@ class AsyncioGspreadWorksheet(object):
         )
 
     async def cell(
-        self, row: int, col: int, value_render_option: gspread.utils.ValueRenderOption = gspread.utils.ValueRenderOption.formatted
+        self,
+        row: int,
+        col: int,
+        value_render_option: gspread.utils.ValueRenderOption = gspread.utils.ValueRenderOption.formatted,
     ) -> gspread.Cell:
         """Returns an instance of a :class:`gspread.Cell` located at
         `row` and `col` column. Wraps :meth:`gspread.Worksheet.cell`.
@@ -1510,7 +1515,9 @@ class AsyncioGspreadWorksheet(object):
         return self.ws.col_count
 
     async def col_values(
-        self, col, value_render_option: gspread.utils.ValueRenderOption = gspread.utils.ValueRenderOption.formatted
+        self,
+        col,
+        value_render_option: gspread.utils.ValueRenderOption = gspread.utils.ValueRenderOption.formatted,
     ) -> List[Optional[str]]:
         """Returns a list of all values in column `col`. Wraps
         :meth:`gspread.Worksheet.col_values`.
@@ -2024,7 +2031,10 @@ class AsyncioGspreadWorksheet(object):
 
     @_nowait
     async def insert_cols(
-        self, values: List[List], col: int = 1, value_input_option: gspread.utils.ValueInputOption = gspread.utils.ValueInputOption.raw
+        self,
+        values: List[List],
+        col: int = 1,
+        value_input_option: gspread.utils.ValueInputOption = gspread.utils.ValueInputOption.raw,
     ):
         """Adds multiple new cols to the worksheet at specified index and
         populates them with values. Wraps
@@ -2065,7 +2075,10 @@ class AsyncioGspreadWorksheet(object):
 
     @_nowait
     async def insert_row(
-        self, values: List, index: int = 1, value_input_option: gspread.utils.ValueInputOption = gspread.utils.ValueInputOption.raw
+        self,
+        values: List,
+        index: int = 1,
+        value_input_option: gspread.utils.ValueInputOption = gspread.utils.ValueInputOption.raw,
     ):
         """Adds a row to the worksheet at the specified index
         and populates it with values. Wraps
@@ -2094,7 +2107,10 @@ class AsyncioGspreadWorksheet(object):
 
     @_nowait
     async def insert_rows(
-        self, values: List[List], row: int = 1, value_input_option: gspread.utils.ValueInputOption = gspread.utils.ValueInputOption.raw
+        self,
+        values: List[List],
+        row: int = 1,
+        value_input_option: gspread.utils.ValueInputOption = gspread.utils.ValueInputOption.raw,
     ):
         """Adds multiple rows to the worksheet at the specified index and
         populates them with values.
@@ -2400,7 +2416,9 @@ class AsyncioGspreadWorksheet(object):
 
     @_nowait
     async def update_cells(
-        self, cell_list: List[gspread.Cell], value_input_option: gspread.utils.ValueInputOption = gspread.utils.ValueInputOption.raw
+        self,
+        cell_list: List[gspread.Cell],
+        value_input_option: gspread.utils.ValueInputOption = gspread.utils.ValueInputOption.raw,
     ):
         """Updates many cells at once. Wraps
         :meth:`gspread.Worksheet.update_cells`.
