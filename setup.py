@@ -12,6 +12,8 @@ try:
 except OSError:
     version = "1.99dev"
 
+install_reqs = [x.strip() for x in open('requirements.in')]
+
 setuptools.setup(
     name="gspread_asyncio",
     version=version,
@@ -39,5 +41,5 @@ setuptools.setup(
     },
     python_requires=">=3.6",
     packages=setuptools.find_packages(),
-    install_requires=["requests==2.*", "gspread==4.0.*"],
+    install_requires=install_reqs,
 )
