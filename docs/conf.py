@@ -69,7 +69,7 @@ master_doc = "index"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -211,7 +211,7 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "oauth2client": ("https://oauth2client.readthedocs.io/en/latest/", None),
     "gspread": ("https://docs.gspread.org/en/latest/", None),
-    "requests": ("https://requests.readthedocs.io/en/master/", None),
+    "requests": ("https://requests.readthedocs.io/en/latest/", None),
     "google-auth": ("https://google-auth.readthedocs.io/en/latest/", None),
 }
 
