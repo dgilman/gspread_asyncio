@@ -1,2 +1,0 @@
-oauth2client==4.*
-google_auth==1.*

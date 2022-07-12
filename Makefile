@@ -1,6 +1,5 @@
 travis-install:
-	pip install -r docs/requirements.txt
-	pip install -r tests/requirements.txt
+	pip install -r requirements_dev.txt
 	cp tests/.env.example tests/.env
 
 black-install:
