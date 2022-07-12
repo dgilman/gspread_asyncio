@@ -1,7 +1,6 @@
 import asyncio
 import functools
 import logging
-import sys
 from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import gspread
@@ -15,7 +14,6 @@ import requests
 # If it is true, the method call gets scheduled on the event loop and
 # returns a task.
 
-PY37 = sys.version_info >= (3, 7)
 if TYPE_CHECKING:
     import re
 
@@ -45,12 +43,7 @@ def _nowait(f):
             del kwargs["nowait"]
 
         if nowait:
-            if PY37:
-                return asyncio.create_task(f(*args, **kwargs))
-            else:
-                return asyncio.ensure_future(
-                    f(*args, **kwargs), loop=args[0].agcm._loop
-                )
+            return asyncio.create_task(f(*args, **kwargs))
         else:
             return await f(*args, **kwargs)
 
@@ -256,10 +249,7 @@ class AsyncioGspreadClientManager(object):
         :returns: a ready-to-use :class:`~gspread_asyncio.AsyncioGspreadClient`
         """
         if self._loop is None:
-            if PY37:
-                self._loop = asyncio.get_running_loop()
-            else:
-                self._loop = asyncio.get_event_loop()
+            self._loop = asyncio.get_running_loop()
 
         await self.auth_lock.acquire()
         try:
