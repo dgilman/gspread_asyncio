@@ -1099,7 +1099,7 @@ class AsyncioGspreadWorksheet(object):
 
         .. note::
 
-            API behavior with nested groups and non-matching ``[start:end]``
+            API behavior with nested groups and non-matching ``[start:end)``
             range can be found here: `Add Dimension Group Request`_
 
             .. _Add Dimension Group Request: https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddDimensionGroupRequest
@@ -1117,7 +1117,7 @@ class AsyncioGspreadWorksheet(object):
 
         .. note::
 
-            API behavior with nested groups and non-matching ``[start:end]``
+            API behavior with nested groups and non-matching ``[start:end)``
             range can be found here: `Add Dimension Group Request`_
 
             .. _Add Dimension Group Request: https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddDimensionGroupRequest
