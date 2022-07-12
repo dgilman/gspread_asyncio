@@ -778,7 +778,7 @@ class AsyncioGspreadSpreadsheet(object):
         """
         return self.ss.locale
 
-    async def named_range(self, named_range: str) -> list[gspread.cell.Cell]:
+    async def named_range(self, named_range: str) -> List[gspread.cell.Cell]:
         """return a list of :class:`gspread.cell.Cell` objects from
         the specified named range.
 
@@ -1270,7 +1270,7 @@ class AsyncioGspreadWorksheet(object):
         return await self.agcm._call(self.ws.batch_clear, ranges)
 
     @_nowait
-    async def batch_format(self, formats: list[dict]):
+    async def batch_format(self, formats: List[dict]):
         """Formats cells in batch.
 
         :param list formats: List of ranges to format and the new format to apply
