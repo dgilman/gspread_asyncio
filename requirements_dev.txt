@@ -4,64 +4,24 @@
 #
 #    pip-compile --output-file=requirements_dev.txt docs/requirements.in requirements.in requirements_dev.in
 #
-alabaster==0.7.12
-    # via sphinx
-babel==2.10.3
-    # via sphinx
 black==22.6.0
     # via -r requirements_dev.in
 build==0.8.0
     # via pip-tools
-cachetools==5.2.0
-    # via google-auth
-certifi==2022.6.15
-    # via requests
-charset-normalizer==2.1.0
-    # via requests
 click==8.1.3
     # via
     #   black
     #   pip-tools
-docutils==0.17.1
-    # via
-    #   m2r2
-    #   sphinx
-google-auth==2.9.0
-    # via
-    #   google-auth-oauthlib
-    #   gspread
-google-auth-oauthlib==0.5.2
-    # via gspread
-gspread==5.4.0
-    # via
-    #   -r docs/requirements.in
-    #   -r requirements.in
 httplib2==0.20.4
     # via oauth2client
-idna==3.3
-    # via requests
-imagesize==1.4.1
-    # via sphinx
 isort==5.10.1
     # via -r requirements_dev.in
-jinja2==3.1.2
-    # via sphinx
-m2r2==0.3.2
-    # via -r docs/requirements.in
-markupsafe==2.1.1
-    # via jinja2
-mistune==0.8.4
-    # via m2r2
 mypy-extensions==0.4.3
     # via black
 oauth2client==4.1.3
     # via -r requirements_dev.in
-oauthlib==3.2.0
-    # via requests-oauthlib
 packaging==21.3
-    # via
-    #   build
-    #   sphinx
+    # via build
 pathspec==0.9.0
     # via black
 pep517==0.12.0
@@ -76,59 +36,20 @@ pyasn1==0.4.8
     #   pyasn1-modules
     #   rsa
 pyasn1-modules==0.2.8
-    # via
-    #   google-auth
-    #   oauth2client
-pygments==2.12.0
-    # via sphinx
+    # via oauth2client
 pyparsing==3.0.9
     # via
     #   httplib2
     #   packaging
-pytz==2022.1
-    # via babel
-requests==2.28.1
-    # via
-    #   -r requirements.in
-    #   requests-oauthlib
-    #   sphinx
-requests-oauthlib==1.3.1
-    # via google-auth-oauthlib
 rsa==4.8
-    # via
-    #   google-auth
-    #   oauth2client
+    # via oauth2client
 six==1.16.0
-    # via
-    #   google-auth
-    #   oauth2client
-snowballstemmer==2.2.0
-    # via sphinx
-sphinx==5.0.2
-    # via
-    #   -r docs/requirements.in
-    #   sphinxcontrib-trio
-sphinxcontrib-applehelp==1.0.2
-    # via sphinx
-sphinxcontrib-devhelp==1.0.2
-    # via sphinx
-sphinxcontrib-htmlhelp==2.0.0
-    # via sphinx
-sphinxcontrib-jsmath==1.0.1
-    # via sphinx
-sphinxcontrib-qthelp==1.0.3
-    # via sphinx
-sphinxcontrib-serializinghtml==1.1.5
-    # via sphinx
-sphinxcontrib-trio==1.1.2
-    # via -r docs/requirements.in
+    # via oauth2client
 tomli==2.0.1
     # via
     #   black
     #   build
     #   pep517
-urllib3==1.26.10
-    # via requests
 wheel==0.37.1
     # via pip-tools
 
