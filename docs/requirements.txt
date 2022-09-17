@@ -25,7 +25,7 @@ google-auth==2.9.0
 google-auth-oauthlib==0.5.2
     # via gspread
 gspread==5.4.0
-    # via -r docs/requirements.in
+    # via -r requirements.in
 idna==3.3
     # via requests
 imagesize==1.4.1
@@ -33,12 +33,12 @@ imagesize==1.4.1
 jinja2==3.1.2
     # via sphinx
 m2r2==0.3.2
-    # via -r docs/requirements.in
+    # via -r requirements.in
 markupsafe==2.1.1
     # via jinja2
 mistune==0.8.4
     # via m2r2
-oauthlib==3.2.0
+oauthlib==3.2.1
     # via requests-oauthlib
 packaging==21.3
     # via sphinx
@@ -68,7 +68,7 @@ snowballstemmer==2.2.0
     # via sphinx
 sphinx==5.0.2
     # via
-    #   -r docs/requirements.in
+    #   -r requirements.in
     #   sphinxcontrib-trio
 sphinxcontrib-applehelp==1.0.2
     # via sphinx
@@ -83,6 +83,6 @@ sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
 sphinxcontrib-trio==1.1.2
-    # via -r docs/requirements.in
+    # via -r requirements.in
 urllib3==1.26.10
     # via requests
