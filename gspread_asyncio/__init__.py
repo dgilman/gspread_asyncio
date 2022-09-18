@@ -2203,7 +2203,7 @@ class AsyncioGspreadWorksheet(object):
             row=row,
             value_input_option=value_input_option,
             api_call_count=2,
-            inherit_from_before=inherit_from_before
+            inherit_from_before=inherit_from_before,
         )
 
     async def list_dimension_group_columns(self) -> List[dict]:
