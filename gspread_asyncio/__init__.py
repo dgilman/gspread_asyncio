@@ -805,6 +805,47 @@ class AsyncioGspreadSpreadsheet(object):
         return await self.agcm._call(self.ss.remove_permissions, value, role=role)
 
     @_nowait
+    async def transfer_ownership(self, permission_id: str):
+        """Transfer the ownership of this file to a new user.
+
+        It is necessary to first create the permission with the new owner's email address,
+        get the permission ID then use this method to transfer the ownership.
+
+        .. note::
+
+           You can list all permission using :meth:`gspread.spreadsheet.Spreadsheet.list_permissions`
+
+        .. warning::
+
+           You can only transfer ownership to a new user, you cannot transfer ownership to a group
+           or a domain email address.
+
+        :param str permission_id: New permission ID
+        :param bool nowait: (optional) If true, return a scheduled future
+            instead of waiting for the API call to complete.
+
+        .. versionadded:: 1.7
+        """
+        return await self.agcm._call(self.ss.transfer_ownership, permission_id)
+
+    @_nowait
+    async def accept_ownership(self, permission_id: str):
+        """Accept the pending ownership request on that file.
+
+        It is necessary to edit the permission with the pending ownership.
+
+        .. note::
+           You can only accept ownership transfer for the user currently being used.
+
+        .. versionadded:: 1.7
+
+        :param str permission_id: New permission ID
+        :param bool nowait: (optional) If true, return a scheduled future
+            instead of waiting for the API call to complete.
+        """
+        return await self.agcm._call(self.ss.accept_ownership, permission_id)
+
+    @_nowait
     async def reorder_worksheets(
         self, worksheets_in_desired_order: "Iterable[AsyncioGspreadWorksheet]"
     ):
@@ -2025,6 +2066,7 @@ class AsyncioGspreadWorksheet(object):
         values: List[List],
         col: int = 1,
         value_input_option: gspread.utils.ValueInputOption = gspread.utils.ValueInputOption.raw,
+        inherit_from_before: bool = False,
     ):
         """Adds multiple new cols to the worksheet at specified index and
         populates them with values. Wraps
@@ -2037,6 +2079,17 @@ class AsyncioGspreadWorksheet(object):
             rendered in the output. Possible values are ``RAW`` or
             ``USER_ENTERED``. See `ValueInputOption`_ in the Sheets API.
         :type value_input_option: `gspread.utils.ValueInputOption`
+        :param bool inherit_from_before: (optional) If True, new columns will
+            inherit their properties from the previous column. Defaults to
+            False, meaning that new columns acquire the properties of the
+            column immediately after them.
+
+            .. warning::
+
+               `inherit_from_before` must be False if adding at the left edge
+               of a spreadsheet (`col=1`), and must be True if adding at the
+               right edge of the spreadsheet.
+
         :param bool nowait: (optional) If true, return a scheduled future instead of waiting for the API call to complete.
 
         .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
@@ -2047,6 +2100,7 @@ class AsyncioGspreadWorksheet(object):
             values,
             col=col,
             value_input_option=value_input_option,
+            inherit_from_before=inherit_from_before,
         )
 
     @_nowait
@@ -2069,6 +2123,7 @@ class AsyncioGspreadWorksheet(object):
         values: List,
         index: int = 1,
         value_input_option: gspread.utils.ValueInputOption = gspread.utils.ValueInputOption.raw,
+        inherit_from_before: bool = False,
     ):
         """Adds a row to the worksheet at the specified index
         and populates it with values. Wraps
@@ -2084,6 +2139,17 @@ class AsyncioGspreadWorksheet(object):
             (optional) Determines how values should be
             rendered in the output. See
             `ValueInputOption`_ in the Sheets API.
+        :param bool inherit_from_before: (optional) If True, the new row will
+            inherit its properties from the previous row. Defaults to False,
+            meaning that the new row acquires the properties of the row
+            immediately after it.
+
+            .. warning::
+
+               `inherit_from_before` must be False when adding a row to the top
+               of a spreadsheet (`index=1`), and must be True when adding to
+               the bottom of the spreadsheet.
+
         :param bool nowait: (optional) If true, return a scheduled future instead of waiting for the API call to complete.
 
         .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
@@ -2093,6 +2159,7 @@ class AsyncioGspreadWorksheet(object):
             values,
             index=index,
             value_input_option=value_input_option,
+            inherit_from_before=inherit_from_before,
         )
 
     @_nowait
@@ -2101,6 +2168,7 @@ class AsyncioGspreadWorksheet(object):
         values: List[List],
         row: int = 1,
         value_input_option: gspread.utils.ValueInputOption = gspread.utils.ValueInputOption.raw,
+        inherit_from_before: bool = False,
     ):
         """Adds multiple rows to the worksheet at the specified index and
         populates them with values.
@@ -2114,6 +2182,17 @@ class AsyncioGspreadWorksheet(object):
             (optional) Determines how input data
             should be interpreted. Possible values are ``RAW`` or
             ``USER_ENTERED``. See `ValueInputOption`_ in the Sheets API.
+        :param bool inherit_from_before: (optional) If True, the new row will
+            inherit its properties from the previous row. Defaults to False,
+            meaning that the new row acquires the properties of the row
+            immediately after it.
+
+            .. warning::
+
+               `inherit_from_before` must be False when adding a row to the top
+               of a spreadsheet (`index=1`), and must be True when adding to
+               the bottom of the spreadsheet.
+
         :param bool nowait: (optional) If true, return a scheduled future instead of waiting for the API call to complete.
 
         .. versionadded:: 1.1
@@ -2124,6 +2203,7 @@ class AsyncioGspreadWorksheet(object):
             row=row,
             value_input_option=value_input_option,
             api_call_count=2,
+            inherit_from_before=inherit_from_before
         )
 
     async def list_dimension_group_columns(self) -> List[dict]:
@@ -2462,6 +2542,17 @@ class AsyncioGspreadWorksheet(object):
 
     async def update_title(self, title):
         raise NotImplemented("This breaks ws caching, could be implemented later")
+
+    @_nowait
+    async def update_tab_color(self, color: dict):
+        """Changes the worksheet's tab color.
+
+        :param dict color: The red, green and blue values of the color, between 0 and 1.
+        :param bool nowait: (optional) If true, return a scheduled future instead of waiting for the API call to complete.
+
+        .. versionadded:: 1.7.0
+        """
+        return await self.agcm._call(self.ws.update_tab_color, color)
 
     @property
     def url(self) -> str:

@@ -32,7 +32,7 @@ google-auth==2.11.0
     #   gspread
 google-auth-oauthlib==0.5.3
     # via gspread
-gspread==5.4.0
+gspread==5.5.0
     # via
     #   -r docs/requirements.in
     #   -r requirements.in
@@ -46,7 +46,7 @@ isort==5.10.1
     # via -r requirements_dev.in
 jinja2==3.1.2
     # via sphinx
-m2r2==0.3.2
+m2r2==0.3.3
     # via -r docs/requirements.in
 markupsafe==2.1.1
     # via jinja2

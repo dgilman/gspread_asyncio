@@ -16,7 +16,7 @@ google-auth==2.11.0
     #   gspread
 google-auth-oauthlib==0.5.3
     # via gspread
-gspread==5.4.0
+gspread==5.5.0
     # via -r requirements.in
 idna==3.4
     # via requests
