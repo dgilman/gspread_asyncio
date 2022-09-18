@@ -2166,16 +2166,24 @@ class AsyncioGspreadWorksheet(object):
         """
         return await self.agcm._call(self.ws.merge_cells, name, merge_type=merge_type)
 
-    async def range(self, name: str) -> List[gspread.Cell]:
+    async def range(self, *args, **kwargs) -> List[gspread.Cell]:
         """Returns a list of :class:`~gspread.Cell` objects from a specified
         range. Wraps :meth:`gspread.Worksheet.range`.
 
         :param str name: A string with range value in A1 notation, e.g. 'A1:A5' or the
              named range to fetch.
 
+        Alternatively, you may specify numeric boundaries. All values
+        index from 1 (one):
+
+        :param int first_row: Row number
+        :param int first_col: Row number
+        :param int last_row: Row number
+        :param int last_col: Row number
+
         :rtype: :class:`~typing.List`\\[:class:`gspread.Cell`\\]
         """
-        return await self.agcm._call(self.ws.range, name=name)
+        return await self.agcm._call(self.ws.range, *args, **kwargs)
 
     @_nowait
     async def resize(self, rows: Optional[int] = None, cols: Optional[int] = None):
