@@ -12,7 +12,7 @@ jobs:
         python-version: [ '3.10' ]
     name: Release
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python 3.10
         uses: actions/setup-python@v1
         with:
@@ -33,7 +33,7 @@ jobs:
           --wheel
           --outdir dist/
       - name: Publish distribution to PyPI
-        uses: pypa/gh-action-pypi-publish@master
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
 
