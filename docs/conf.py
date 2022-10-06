@@ -93,11 +93,12 @@ html_theme = "alabaster"
 #
 html_theme_options = {
     "description": "An asyncio API for Google Spreadsheets",
-    "github_button": "true",
+    "github_button": True,
     "github_repo": "gspread_asyncio",
     "github_user": "dgilman",
-    "fixed_sidebar": "true",
+    "fixed_sidebar": True,
 }
+toc_object_entries = False
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

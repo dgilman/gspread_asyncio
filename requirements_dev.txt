@@ -14,7 +14,7 @@ build==0.8.0
     # via pip-tools
 cachetools==5.2.0
     # via google-auth
-certifi==2022.9.14
+certifi==2022.9.24
     # via requests
 charset-normalizer==2.1.1
     # via requests
@@ -26,7 +26,7 @@ docutils==0.19
     # via
     #   m2r2
     #   sphinx
-google-auth==2.11.0
+google-auth==2.12.0
     # via
     #   google-auth-oauthlib
     #   gspread
@@ -66,7 +66,7 @@ pathspec==0.10.1
     # via black
 pep517==0.13.0
     # via build
-pip-tools==6.8.0
+pip-tools==6.9.0
     # via -r requirements_dev.in
 platformdirs==2.5.2
     # via black
@@ -85,7 +85,7 @@ pyparsing==3.0.9
     # via
     #   httplib2
     #   packaging
-pytz==2022.2.1
+pytz==2022.4
     # via babel
 requests==2.28.1
     # via
@@ -104,7 +104,7 @@ six==1.16.0
     #   oauth2client
 snowballstemmer==2.2.0
     # via sphinx
-sphinx==5.1.1
+sphinx==5.2.3
     # via
     #   -r docs/requirements.in
     #   sphinxcontrib-trio
