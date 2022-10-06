@@ -1889,7 +1889,7 @@ class AsyncioGspreadWorksheet(object):
         head: int = 1,
         default_blank: str = "",
         allow_underscores_in_numeric_literals: bool = False,
-        numericise_ignore: List[Union[int, str]] = None,
+        numericise_ignore: List[Union[int, str]] = [],
         value_render_option: gspread.utils.ValueRenderOption = None,
     ) -> List[dict]:
         """Returns a list of dictionaries, all of them having the contents
@@ -1913,7 +1913,7 @@ class AsyncioGspreadWorksheet(object):
         :param bool allow_underscores_in_numeric_literals: (optional) Allow
              underscores in numeric literals, as introduced in PEP 515
         :param list numericise_ignore: (optional) List of ints of indices of
-             the row (starting at 1) to ignore numericising, special use
+             the column (starting at 1) to ignore numericising, special use
              of ['all'] to ignore numericising on all columns.
         :param `gspread.utils.ValueRenderOption` value_render_option:
             (optional) Determines how values should be
