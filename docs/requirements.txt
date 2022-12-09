@@ -10,7 +10,7 @@ babel==2.10.3
     # via sphinx
 cachetools==5.2.0
     # via google-auth
-certifi==2022.9.24
+certifi==2022.12.7
     # via requests
 charset-normalizer==2.1.1
     # via requests
@@ -25,7 +25,7 @@ google-auth==2.12.0
 google-auth-oauthlib==0.5.3
     # via gspread
 gspread==5.5.0
-    # via -r docs/requirements.in
+    # via -r requirements.in
 idna==3.4
     # via requests
 imagesize==1.4.1
@@ -33,7 +33,7 @@ imagesize==1.4.1
 jinja2==3.1.2
     # via sphinx
 m2r2==0.3.3
-    # via -r docs/requirements.in
+    # via -r requirements.in
 markupsafe==2.1.1
     # via jinja2
 mistune==0.8.4
@@ -68,7 +68,7 @@ snowballstemmer==2.2.0
     # via sphinx
 sphinx==5.2.3
     # via
-    #   -r docs/requirements.in
+    #   -r requirements.in
     #   sphinxcontrib-trio
 sphinxcontrib-applehelp==1.0.2
     # via sphinx
@@ -83,6 +83,6 @@ sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
 sphinxcontrib-trio==1.1.2
-    # via -r docs/requirements.in
+    # via -r requirements.in
 urllib3==1.26.12
     # via requests
