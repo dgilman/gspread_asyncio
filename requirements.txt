@@ -20,7 +20,7 @@ gspread==5.5.0
     # via -r requirements.in
 idna==3.4
     # via requests
-oauthlib==3.2.1
+oauthlib==3.2.2
     # via requests-oauthlib
 pyasn1==0.4.8
     # via

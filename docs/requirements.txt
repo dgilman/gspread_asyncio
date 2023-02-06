@@ -38,7 +38,7 @@ markupsafe==2.1.1
     # via jinja2
 mistune==0.8.4
     # via m2r2
-oauthlib==3.2.1
+oauthlib==3.2.2
     # via requests-oauthlib
 packaging==21.3
     # via sphinx
