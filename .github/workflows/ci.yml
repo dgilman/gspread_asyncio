@@ -17,7 +17,7 @@ jobs:
       - name: install lint deps
         run: make format-install
       - name: install docs deps
-        run: make format-docs
+        run: make docs-install
       - name: format-check
         run: make format-check
       - name: docs
