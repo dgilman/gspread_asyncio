@@ -1732,6 +1732,7 @@ class AsyncioGspreadWorksheet(object):
         query: "Union[str, re.Pattern]",
         in_row: Optional[int] = None,
         in_column: Optional[int] = None,
+        case_sensitive: bool = True
     ) -> "gspread.Cell":
         """Finds the first cell matching the query. Wraps
         :meth:`gspread.Worksheet.find`.
@@ -1741,10 +1742,12 @@ class AsyncioGspreadWorksheet(object):
         :param int in_row: (optional) One-based row number to scope the search.
         :param int in_column: (optional) One-based column number to scope
             the search.
+        :param bool case_sensitive: (optional) case sensitive string search.
+            Default is True, does not apply to regular expressions.
         :rtype: :class:`gspread.Cell`
         """
         return await self.agcm._call(
-            self.ws.find, query, in_row=in_row, in_column=in_column
+            self.ws.find, query, in_row=in_row, in_column=in_column, case_sensitive=case_sensitive,
         )
 
     async def findall(
