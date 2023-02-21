@@ -1,9 +1,12 @@
-travis-install:
-	pip install -r requirements_dev.txt
+test-install:
+	pip install -r requirements_test.txt
 	cp tests/.env.example tests/.env
 
-black-install:
-	pip install -r requirements_dev.txt
+format-install:
+	pip install -r requirements_format.txt
+
+docs-install:
+	pip install -r docs/requirements.txt
 
 version-tag:
 	git describe --tags > version_tag

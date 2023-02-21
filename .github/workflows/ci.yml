@@ -6,16 +6,18 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ '3.10' ]
+        python-version: [ '3.11' ]
     name: Lint
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.10
+      - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
-      - name: install-format
-        run: make black-install
+          python-version: '3.11'
+      - name: install lint deps
+        run: make format-install
+      - name: install docs deps
+        run: make format-docs
       - name: format-check
         run: make format-check
       - name: docs
@@ -26,7 +28,7 @@ jobs:
     needs: lint
     strategy:
       matrix:
-        python-version: [ '3.7', '3.8', '3.9', '3.10']
+        python-version: [ '3.7', '3.8', '3.9', '3.10', '3.11']
     name: Python ${{ matrix.python-version }} test run
     steps:
       - uses: actions/checkout@v3
@@ -35,8 +37,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
-      - name: install
-        run: make travis-install
+      - name: install deps
+        run: make test-install
       - name: install age
         run: wget https://github.com/FiloSottile/age/releases/download/v1.0.0/age-v1.0.0-linux-amd64.tar.gz && tar xf age-v1.0.0-linux-amd64.tar.gz
       - name: decrypt keys
