@@ -1626,6 +1626,8 @@ class AsyncioGspreadWorksheet(object):
         :type paste_orientation: `gspread.utils.PasteOrientation`
 
         .. _Paste Types: https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#pastetype
+
+        .. versionadded:: 1.8
         """
         return await self.agcm._call(
             self.ws.copy_range,
@@ -1655,6 +1657,8 @@ class AsyncioGspreadWorksheet(object):
         :type paste_type: `gspread.utils.PasteType`
 
         .. _Paste Types: https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#pastetype
+
+        .. versionadded:: 1.8
         """
 
     async def define_named_range(self, name: str, range_name: str):
