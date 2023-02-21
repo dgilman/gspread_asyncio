@@ -4,7 +4,8 @@ An [asyncio wrapper](https://docs.python.org/3/library/asyncio.html) for [burnas
 
 Requires Python >= 3.7.
 
-[![Documentation Status](https://readthedocs.org/projects/gspread-asyncio/badge/?version=latest)](https://gspread-asyncio.readthedocs.io/en/latest/?badge=latest) [![Build Status](https://travis-ci.org/dgilman/gspread_asyncio.svg?branch=master)](https://travis-ci.org/dgilman/gspread_asyncio)
+[![Documentation Status](https://readthedocs.org/projects/gspread-asyncio/badge/?version=latest)](https://gspread-asyncio.readthedocs.io/en/latest/?badge=latest) ![CI status](https://github.com/dgilman/gspread_asyncio/actions/workflows/ci.yml/badge.svg)
+
 
 ## Features
 
