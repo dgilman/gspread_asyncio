@@ -1632,7 +1632,7 @@ class AsyncioGspreadWorksheet(object):
             source,
             dest,
             paste_type=paste_type,
-            paste_orientation=paste_orientation
+            paste_orientation=paste_orientation,
         )
 
     async def cut_range(
@@ -1791,7 +1791,7 @@ class AsyncioGspreadWorksheet(object):
         query: "Union[str, re.Pattern]",
         in_row: Optional[int] = None,
         in_column: Optional[int] = None,
-        case_sensitive: bool = True
+        case_sensitive: bool = True,
     ) -> "gspread.Cell":
         """Finds the first cell matching the query. Wraps
         :meth:`gspread.Worksheet.find`.
@@ -1806,7 +1806,11 @@ class AsyncioGspreadWorksheet(object):
         :rtype: :class:`gspread.Cell`
         """
         return await self.agcm._call(
-            self.ws.find, query, in_row=in_row, in_column=in_column, case_sensitive=case_sensitive,
+            self.ws.find,
+            query,
+            in_row=in_row,
+            in_column=in_column,
+            case_sensitive=case_sensitive,
         )
 
     async def findall(
