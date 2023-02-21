@@ -1361,7 +1361,7 @@ class AsyncioGspreadWorksheet(object):
         ranges: List[str],
         major_dimension: str = None,
         value_render_option: gspread.utils.ValueRenderOption = None,
-        date_time_render_option: str = None,
+        date_time_render_option: gspread.utils.DateTimeOption = None,
     ) -> list:
         """Returns one or more ranges of values from the sheet.
 
@@ -1375,7 +1375,7 @@ class AsyncioGspreadWorksheet(object):
             represented in the output. The default render option
             is `FORMATTED_VALUE`.
 
-        :param str date_time_render_option: (optional) How dates, times, and
+        :param `gspread.utils.DateTimeOption` date_time_render_option: (optional) How dates, times, and
             durations should be represented in the output. This is ignored if
             value_render_option is FORMATTED_VALUE. The default dateTime render
             option is `SERIAL_NUMBER`.
@@ -1403,7 +1403,7 @@ class AsyncioGspreadWorksheet(object):
         value_input_option: gspread.utils.ValueInputOption = None,
         include_values_in_response=None,
         response_value_render_option: gspread.utils.ValueRenderOption = None,
-        response_date_time_render_option=None,
+        response_date_time_render_option: gspread.utils.DateTimeOption = None,
     ):
         """Sets values in one or more cell ranges of the sheet at
         once. Wraps :meth:`gspread.Worksheet.batch_update`.
@@ -1444,7 +1444,7 @@ class AsyncioGspreadWorksheet(object):
             values in the response should be rendered.
             See `ValueRenderOption`_ in the Sheets API.
 
-        :param str response_date_time_render_option: (optional) Determines how
+        :param `gspread.utils.DateTimeOption` response_date_time_render_option: (optional)
             Determines how dates, times, and durations in the response
             should be rendered. See `DateTimeRenderOption`_ in the Sheets API.
 
@@ -1597,6 +1597,65 @@ class AsyncioGspreadWorksheet(object):
         .. versionadded:: 1.6
         """
         return await self.agcm._call(self.ws.copy_to, spreadsheet_id)
+
+    async def copy_range(
+        self,
+        source: str,
+        dest: str,
+        paste_type=gspread.utils.PasteType.normal,
+        paste_orientation=gspread.utils.PasteOrientation.normal,
+    ):
+        """Copies a range of data from source to dest
+
+            .. note::
+                ``paste_type`` values are explained here: `Paste Types`_
+
+        :param str source: The A1 notation of the source range to copy
+        :param str dest: The A1 notation of the destination where to paste the data
+            Can be the A1 notation of the top left corner where the range must be paste
+            ex: G16, or a complete range notation ex: G16:I20.
+            The dimensions of the destination range is not checked and has no effect,
+            if the destination range does not match the source range dimension, the entire
+            source range is copies anyway.
+        :param paste_type: the paste type to apply. Many paste type are available from
+            the Sheet API, see above note for detailed values for all values and their effects.
+            Defaults to ``PasteType.normal``
+        :type paste_type: `gspread.utils.PasteType`
+        :param paste_orientation: The paste orient to apply.
+            Possible values are: ``normal`` to keep the same orientation, ``transpose`` where all rows become columns and vice versa.
+        :type paste_orientation: `gspread.utils.PasteOrientation`
+
+        .. _Paste Types: https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#pastetype
+        """
+        return await self.agcm._call(
+            self.ws.copy_range,
+            source,
+            dest,
+            paste_type=paste_type,
+            paste_orientation=paste_orientation
+        )
+
+    async def cut_range(
+        self,
+        source: str,
+        dest: str,
+        paste_type=gspread.utils.PasteType.normal,
+    ):
+        """Moves a range of data form source to dest
+
+            .. note::
+               ``paste_type`` values are explained here: `Paste Types`_
+
+        :param str source: The A1 notation of the source range to move
+        :param str dest: The A1 notation of the destination where to paste the data
+            **it must be a single cell** in the A1 notation. ex: G16
+        :param paste_type: the paste type to apply. Many paste type are available from
+            the Sheet API, see above note for detailed values for all values and their effects.
+            Defaults to ``PasteType.normal``
+        :type paste_type: `gspread.utils.PasteType`
+
+        .. _Paste Types: https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#pastetype
+        """
 
     async def define_named_range(self, name: str, range_name: str):
         """
@@ -1843,7 +1902,7 @@ class AsyncioGspreadWorksheet(object):
         range_name: str = None,
         major_dimension: str = None,
         value_render_option: gspread.utils.ValueRenderOption = None,
-        date_time_render_option: str = None,
+        date_time_render_option: gspread.utils.DateTimeOption = None,
     ):
         """Reads values of a single range or a cell of a sheet.
 
@@ -1855,7 +1914,7 @@ class AsyncioGspreadWorksheet(object):
             (optional) How values should be
             represented in the output. The default render option is
             ``ValueRenderOption.formatted``.
-        :param str date_time_render_option: (optional) How dates, times, and
+        :param `gspread.utils.DateTimeOption` date_time_render_option: (optional) How dates, times, and
             durations should be represented in the output. This is ignored if
             ``value_render_option`` is ``ValueRenderOption.formatted``. The default
             ``date_time_render_option`` is ``SERIAL_NUMBER``.
@@ -1960,7 +2019,7 @@ class AsyncioGspreadWorksheet(object):
         range_name: str = None,
         major_dimension: str = None,
         value_render_option: gspread.utils.ValueRenderOption = None,
-        date_time_render_option: str = None,
+        date_time_render_option: gspread.utils.DateTimeOption = None,
     ) -> List[List]:
         """Returns a list of lists containing all values from specified range.
         By default values are returned as strings. See ``value_render_option``
@@ -1990,7 +2049,7 @@ class AsyncioGspreadWorksheet(object):
                   the formulas. For example, if A1 is 1.23 and A2 is =A1 and
                   formatted as currency, then A2 would return "=A1".
 
-        :param str date_time_render_option: (optional) How dates, times, and
+        :param `gspread.utils.ValueRenderOption` date_time_render_option: (optional) How dates, times, and
              durations should be represented in the output. This is ignored if
              ``value_render_option`` is ``FORMATTED_VALUE``. The default
              ``date_time_render_option`` is ``SERIAL_NUMBER``.
@@ -2292,7 +2351,7 @@ class AsyncioGspreadWorksheet(object):
         row: int,
         major_dimension=None,
         value_render_option: gspread.utils.ValueRenderOption = None,
-        date_time_render_option=None,
+        date_time_render_option: gspread.utils.DateTimeOption = None,
     ) -> list:
         """Returns a list of all values in a `row`. Wraps
         :meth:`gspread.Worksheet.row_values`.
@@ -2304,6 +2363,9 @@ class AsyncioGspreadWorksheet(object):
             (optional) Determines how values should be
             rendered in the output. See
             `ValueRenderOption`_ in the Sheets API.
+        :param `gspread.utils.DateTimeOption` date_time_render_option: (optional) How dates, times, and
+            durations should be represented in the output.
+
 
         .. _ValueRenderOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueRenderOption
         """
@@ -2426,7 +2488,7 @@ class AsyncioGspreadWorksheet(object):
         value_input_option: gspread.utils.ValueInputOption = None,
         include_values_in_response=None,
         response_value_render_option: gspread.utils.ValueRenderOption = None,
-        response_date_time_render_option=None,
+        response_date_time_render_option: gspread.utils.DateTimeOption = None,
     ):
         """Sets values in a cell range of the sheet. Wraps
         :meth:`gspread.Worksheet.update`.
