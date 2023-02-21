@@ -1943,7 +1943,7 @@ class AsyncioGspreadWorksheet(object):
         """
         return await self.agcm._call(
             self.ws.get,
-            range_name=range_name,
+            range_name,
             major_dimension=major_dimension,
             value_render_option=value_render_option,
             date_time_render_option=date_time_render_option,
