@@ -1,4 +1,4 @@
 Sphinx==5.*
 m2r2==0.3.3
 sphinxcontrib-trio==1.1.2
-gspread==5.5.*
+gspread==5.7.*
