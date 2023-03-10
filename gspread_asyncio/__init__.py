@@ -700,6 +700,17 @@ class AsyncioGspreadSpreadsheet(object):
             format=format,
         )
 
+    async def fetch_sheet_metadata(self, params: dict = None) -> dict:
+        """
+
+        :param dict params: (optional) `Query parameters`_.
+
+        :returns: `Response body`_.
+        :rtype: dict
+
+        """
+        return await self.agcm._call(self.ss.fetch_sheet_metadata, params=params)
+
     async def get_worksheet(self, index: int) -> "AsyncioGspreadWorksheet":
         """Retrieves a worksheet (tab) from a spreadsheet by index number.
         Indexes start from zero. Wraps
