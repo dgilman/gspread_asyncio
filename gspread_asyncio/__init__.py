@@ -701,13 +701,14 @@ class AsyncioGspreadSpreadsheet(object):
         )
 
     async def fetch_sheet_metadata(self, params: dict = None) -> dict:
-        """
+        """Retrieve spreadsheet metadata.
 
         :param dict params: (optional) `Query parameters`_.
 
         :returns: `Response body`_.
         :rtype: dict
 
+        .. versionadded:: 1.8.1
         """
         return await self.agcm._call(self.ss.fetch_sheet_metadata, params=params)
 
