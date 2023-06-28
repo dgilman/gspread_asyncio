@@ -880,11 +880,13 @@ class AsyncioGspreadSpreadsheet(object):
         )
 
     @property
-    def sheet1(self) -> str:
+    async def sheet1(self) -> "AsyncioGspreadWorksheet":
         """:returns: Shortcut property for getting the first worksheet.
-        :rtype: str
+        :rtype: an instance of :class:`AsyncioGspreadWorksheet`.
         """
-        return self.ss.sheet1
+        ws = await self.agcm._call(lambda: self.ss.sheet1)
+        aws = self._wrap_ws(ws)
+        return aws
 
     @property
     def timezone(self) -> str:
