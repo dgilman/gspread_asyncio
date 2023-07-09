@@ -402,7 +402,7 @@ class AsyncioGspreadClient(object):
 
         .. versionadded:: 1.6
         """
-        return await self.agcp._call(
+        return await self.agcm._call(
             self.gc.export,
             file_id,
             format=format,
