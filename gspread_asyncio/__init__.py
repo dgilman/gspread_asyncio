@@ -2,6 +2,7 @@ import asyncio
 import functools
 import logging
 from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tuple, Union
+import warnings
 
 import gspread
 from gspread.utils import a1_to_rowcol, extract_id_from_url
@@ -880,11 +881,25 @@ class AsyncioGspreadSpreadsheet(object):
         )
 
     @property
-    def sheet1(self) -> str:
+    async def sheet1(self) -> "AsyncioGspreadWorksheet":
         """:returns: Shortcut property for getting the first worksheet.
-        :rtype: str
+        :rtype: :class:`AsyncioGspreadWorksheet`
+
+        .. warning::
+
+            This is an asynchronous property! It must be awaited.
+
+        .. deprecated:: 1.6
+            use `AsyncioGspreadSpreadsheet.get_sheet1()` instead
         """
-        return self.ss.sheet1
+        warnings.warn("get_title will be removed in a future version of gspread_asyncio, use .get_sheet1()", DeprecationWarning)
+        return await self.get_sheet1()
+
+    async def get_sheet1(self) -> "AsyncioGspreadWorksheet":
+        """:returns: Shortcut for getting the first worksheet.
+        :rtype: :class:`AsyncioGspreadWorksheet`
+        """
+        return await self.get_worksheet(0)
 
     @property
     def timezone(self) -> str:
@@ -907,7 +922,9 @@ class AsyncioGspreadSpreadsheet(object):
         :rtype: str
 
         .. deprecated:: 1.6
+            Use the `.title` property instead.
         """
+        warnings.warn("get_title will be removed in gspread_asyncio 2.x, use the .title property", DeprecationWarning)
         return await self.agcm._call(getattr, self.ss, "title")
 
     @_nowait
@@ -1755,7 +1772,9 @@ class AsyncioGspreadWorksheet(object):
             waiting for the API call to complete.
 
         .. deprecated:: 1.6
+            Use `AsyncioGspreadWorksheet.delete_rows()` instead.
         """
+        warnings.warn("delete_row will be removed in a future version of gspread, use .delete_rows()", DeprecationWarning)
         return await self.agcm._call(self.ws.delete_rows, index)
 
     @_nowait
