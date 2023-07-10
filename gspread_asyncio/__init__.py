@@ -1108,7 +1108,7 @@ class AsyncioGspreadSpreadsheet(object):
 class AsyncioGspreadWorksheet(object):
     """An :mod:`asyncio` wrapper for :class:`gspread.Worksheet`.
     You **must** obtain instances of this class from
-    :meth:`AsynctioGspreadSpreadsheet.add_worksheet`,
+    :meth:`AsyncioGspreadSpreadsheet.add_worksheet`,
     :meth:`AsyncioGspreadSpreadsheet.get_worksheet`,
     :meth:`AsyncioGspreadSpreadsheet.worksheet`,
     or :meth:`AsyncioGspreadSpreadsheet.worksheets`.

@@ -41,7 +41,7 @@ AsyncioGspreadWorksheet
 
 Cell
 ----
-See :class:`gspread.models.Cell`.
+See :class:`gspread.cell.Cell`.
 
 Indices and tables
 ==================
