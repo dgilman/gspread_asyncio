@@ -892,7 +892,10 @@ class AsyncioGspreadSpreadsheet(object):
         .. deprecated:: 1.6
             use `AsyncioGspreadSpreadsheet.get_sheet1()` instead
         """
-        warnings.warn("get_title will be removed in a future version of gspread_asyncio, use .get_sheet1()", DeprecationWarning)
+        warnings.warn(
+            "get_title will be removed in a future version of gspread_asyncio, use .get_sheet1()",
+            DeprecationWarning,
+        )
         return await self.get_sheet1()
 
     async def get_sheet1(self) -> "AsyncioGspreadWorksheet":
@@ -924,7 +927,10 @@ class AsyncioGspreadSpreadsheet(object):
         .. deprecated:: 1.6
             Use the `.title` property instead.
         """
-        warnings.warn("get_title will be removed in gspread_asyncio 2.x, use the .title property", DeprecationWarning)
+        warnings.warn(
+            "get_title will be removed in gspread_asyncio 2.x, use the .title property",
+            DeprecationWarning,
+        )
         return await self.agcm._call(getattr, self.ss, "title")
 
     @_nowait
@@ -1774,7 +1780,10 @@ class AsyncioGspreadWorksheet(object):
         .. deprecated:: 1.6
             Use `AsyncioGspreadWorksheet.delete_rows()` instead.
         """
-        warnings.warn("delete_row will be removed in a future version of gspread, use .delete_rows()", DeprecationWarning)
+        warnings.warn(
+            "delete_row will be removed in a future version of gspread, use .delete_rows()",
+            DeprecationWarning,
+        )
         return await self.agcm._call(self.ws.delete_rows, index)
 
     @_nowait
