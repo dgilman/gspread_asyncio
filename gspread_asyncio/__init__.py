@@ -2502,6 +2502,20 @@ class AsyncioGspreadWorksheet(object):
         """
         return await self.agcm._call(self.ws.show)
 
+    async def hide_gridlines(self):
+        """Hide gridlines on the current worksheet
+
+        .. versionadded:: 1.9
+        """
+        return await self.agcm._call(self.ws.hide_gridlines)
+
+    async def show_gridlines(self):
+        """Show gridlines on the current worksheet
+
+        .. versionadded:: 1.9
+        """
+        return await self.agcm._call(self.ws.show_gridlines)
+
     async def sort(self, specs: List[Tuple[int, str]], range: str = None):
         """Sorts worksheet using given sort orders.
 

@@ -1,2 +1,2 @@
 requests==2.*
-gspread==5.9.*
+gspread==5.10.*
