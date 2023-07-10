@@ -1821,14 +1821,27 @@ class AsyncioGspreadWorksheet(object):
 
         :returns: a newly created :class:`AsyncioGspreadWorksheet`.
 
+        .. warning::
+
+            This breaks caching assumptions in AsyncioGspreadSpreadsheet.
+            Its use is not recommended and it will be removed in a future version.
+
         .. versionadded:: 1.6
+
+        .. deprecated:: 1.9
+            Use `AsyncioGspreadSpreadsheet.duplicate_sheet` instead.
         """
-        return await self.agcm._call(
+        warnings.warn(
+            "duplicate() will be removed in a future version of gspread_asyncio, use duplicate_sheet()",
+            DeprecationWarning,
+        )
+        dup_ws = await self.agcm._call(
             self.ws.duplicate,
             insert_sheet_index=insert_sheet_index,
             new_sheet_id=new_sheet_id,
             new_sheet_name=new_sheet_name,
         )
+        return AsyncioGspreadWorksheet(self.agcm, dup_ws)
 
     async def find(
         self,
