@@ -2053,6 +2053,27 @@ class AsyncioGspreadWorksheet(object):
         """
         return await self.agcm._call(self.ws.get_note, cell)
 
+    async def update_notes(self, notes: Dict):
+        """Update multiple notes.
+
+        :param dict notes: A dict of notes with their cell coordinates and respective content
+
+            dict format is:
+
+            * key: the cell coordinates as A1 range format
+            * value: the string content of the cell
+
+            Example::
+
+                {
+                    "D7": "Please read my notes",
+                    "GH42": "this one is too far",
+                }
+
+        .. versionadded: 1.9
+        """
+        return await self.agcm._call(self.ws.update_notes, notes)
+
     async def get_values(
         self,
         range_name: str = None,
@@ -2217,6 +2238,39 @@ class AsyncioGspreadWorksheet(object):
         .. versionadded:: 1.4
         """
         return await self.agcm._call(self.ws.insert_note, cell, content)
+
+    @_nowait
+    async def insert_notes(self, notes: Dict):
+        """Insert multiple notes.
+
+        :param dict notes: A dict of notes with their cells coordinates and respective content
+
+            dict format is:
+
+            * key: the cell coordinates as A1 range format
+            * value: the string content of the cell
+
+            Example::
+
+                {
+                    "D7": "Please read my notes",
+                    "GH42": "this one is too far",
+                }
+
+        .. versionadded:: 1.9
+        """
+        return await self.agcm._call(self.ws.insert_notes, notes)
+
+    @_nowait
+    async def clear_notes(self, ranges: List[str]):
+        """Clear all notes located at the cells in `ranges`.
+
+        :param ranges: List of A1 coordinates to clear notes
+        :type ranges: :class:`~typing.List`\\[:class:`str`\\]
+
+        .. versionadded:: 1.9
+        """
+        return await self.agcm._call(self.ws.clear_notes, ranges)
 
     @_nowait
     async def insert_row(

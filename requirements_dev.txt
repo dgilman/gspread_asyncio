@@ -32,7 +32,7 @@ google-auth==2.21.0
     #   gspread
 google-auth-oauthlib==1.0.0
     # via gspread
-gspread==5.7.2
+gspread==5.9.0
     # via
     #   -r docs/requirements.in
     #   -r requirements.in
