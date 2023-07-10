@@ -22,7 +22,7 @@ click==8.1.4
     # via
     #   black
     #   pip-tools
-docutils==0.19
+docutils==0.20.1
     # via
     #   m2r2
     #   sphinx
@@ -101,7 +101,7 @@ six==1.16.0
     #   oauth2client
 snowballstemmer==2.2.0
     # via sphinx
-sphinx==5.3.0
+sphinx==7.0.1
     # via
     #   -r docs/requirements.in
     #   sphinxcontrib-trio
