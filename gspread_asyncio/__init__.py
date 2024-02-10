@@ -575,7 +575,7 @@ class AsyncioGspreadSpreadsheet(object):
         self._ws_cache_idx: "Dict[int, AsyncioGspreadWorksheet]" = {}
 
     def __repr__(self):
-        return "<{0} id:{1}>".format(self.__class__.__name__, self.ss.id)
+        return f"<{self.__class__.__name__} id:{self.ss.id}>"
 
     def _wrap_ws(self, ws: gspread.Worksheet) -> "AsyncioGspreadWorksheet":
         aws = AsyncioGspreadWorksheet(self.agcm, ws)
@@ -1093,7 +1093,7 @@ class AsyncioGspreadWorksheet(object):
         self.ws = ws
 
     def __repr__(self):
-        return "<{0} id:{1}>".format(self.__class__.__name__, self.ws.id)
+        return f"<{self.__class__.__name__} id:{self.ws.id}>"
 
     async def acell(
         self,
@@ -1873,6 +1873,7 @@ class AsyncioGspreadWorksheet(object):
         major_dimension: str = None,
         value_render_option: gspread.utils.ValueRenderOption = None,
         date_time_render_option: gspread.utils.DateTimeOption = None,
+        combine_merged_cells: bool = False,
     ):
         """Reads values of a single range or a cell of a sheet.
 
@@ -1888,6 +1889,13 @@ class AsyncioGspreadWorksheet(object):
             durations should be represented in the output. This is ignored if
             ``value_render_option`` is ``ValueRenderOption.formatted``. The default
             ``date_time_render_option`` is ``SERIAL_NUMBER``.
+        :param bool combine_merged_cells: (optional) If True, then all cells that
+            are part of a merged cell will have the same value as the top-left
+            cell of the merged cell. Defaults to False.
+
+            .. warning::
+                Setting this to True will cause an additional API request to be
+                made to retrieve the values of all merged cells.
 
         :rtype: :class:`gspread.worksheet.ValueRange`
 
@@ -1913,6 +1921,7 @@ class AsyncioGspreadWorksheet(object):
             major_dimension=major_dimension,
             value_render_option=value_render_option,
             date_time_render_option=date_time_render_option,
+            combine_merged_cells=combine_merged_cells,
         )
 
     async def get_all_records(
@@ -2011,7 +2020,7 @@ class AsyncioGspreadWorksheet(object):
         major_dimension: str = None,
         value_render_option: gspread.utils.ValueRenderOption = None,
         date_time_render_option: gspread.utils.DateTimeOption = None,
-        combine_merged_cells: bool = False
+        combine_merged_cells: bool = False,
     ) -> List[List]:
         """Returns a list of lists containing all values from specified range.
         By default values are returned as strings. See ``value_render_option``
@@ -2070,7 +2079,7 @@ class AsyncioGspreadWorksheet(object):
             major_dimension=major_dimension,
             value_render_option=value_render_option,
             date_time_render_option=date_time_render_option,
-            combine_merged_cells=combine_merged_cells
+            combine_merged_cells=combine_merged_cells,
         )
 
     async def hide(self):
