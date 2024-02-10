@@ -60,7 +60,7 @@ class Smoketest(unittest.TestCase):
         self.assertEqual(1, len(agc._ss_cache_key))
         self.assertEqual(1, len(agc._ss_cache_title))
         self.assertEqual(ss, agc._ss_cache_key[ss.id])
-        self.assertEqual(ss, agc._ss_cache_title[await ss.get_title()])
+        self.assertEqual(ss, agc._ss_cache_title[ss.title])
 
         await agc.insert_permission(ss.id, None, perm_type="anyone", role="writer")
 
