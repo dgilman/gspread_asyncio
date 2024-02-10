@@ -16,7 +16,7 @@ google-auth==2.27.0
     #   gspread
 google-auth-oauthlib==1.2.0
     # via gspread
-gspread==5.10.0
+gspread==6.0.1
     # via -r requirements.in
 httplib2==0.22.0
     # via oauth2client
@@ -49,5 +49,7 @@ rsa==4.9
     #   oauth2client
 six==1.16.0
     # via oauth2client
+strenum==0.4.15
+    # via gspread
 urllib3==2.2.0
     # via requests

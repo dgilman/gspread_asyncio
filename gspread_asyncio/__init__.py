@@ -2,7 +2,6 @@ import asyncio
 import functools
 import logging
 from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tuple, Union
-import warnings
 
 import gspread
 from gspread.utils import a1_to_rowcol, extract_id_from_url
@@ -880,24 +879,6 @@ class AsyncioGspreadSpreadsheet(object):
             self.ss.reorder_worksheets, (aws.ws for aws in worksheets_in_desired_order)
         )
 
-    @property
-    async def sheet1(self) -> "AsyncioGspreadWorksheet":
-        """:returns: Shortcut property for getting the first worksheet.
-        :rtype: :class:`AsyncioGspreadWorksheet`
-
-        .. warning::
-
-            This is an asynchronous property! It must be awaited.
-
-        .. deprecated:: 1.6
-            use `AsyncioGspreadSpreadsheet.get_sheet1()` instead
-        """
-        warnings.warn(
-            "get_title will be removed in a future version of gspread_asyncio, use .get_sheet1()",
-            DeprecationWarning,
-        )
-        return await self.get_sheet1()
-
     async def get_sheet1(self) -> "AsyncioGspreadWorksheet":
         """:returns: Shortcut for getting the first worksheet.
         :rtype: :class:`AsyncioGspreadWorksheet`
@@ -919,19 +900,6 @@ class AsyncioGspreadSpreadsheet(object):
         :rtype: str
         """
         return self.ss.title
-
-    async def get_title(self) -> str:
-        """:returns: Title of the spreadsheet.
-        :rtype: str
-
-        .. deprecated:: 1.6
-            Use the `.title` property instead.
-        """
-        warnings.warn(
-            "get_title will be removed in gspread_asyncio 2.x, use the .title property",
-            DeprecationWarning,
-        )
-        return await self.agcm._call(getattr, self.ss, "title")
 
     @_nowait
     async def update_locale(self, locale: str):
@@ -1769,24 +1737,6 @@ class AsyncioGspreadWorksheet(object):
         return await self.agcm._call(self.ws.delete_protected_range, id)
 
     @_nowait
-    async def delete_row(self, index: int):
-        """Deletes the row from the worksheet at the specified index. Wraps
-        :meth:`gspread.Worksheet.delete_row`.
-
-        :param int index: Index of a row for deletion.
-        :param bool nowait: (optional) If true, return a scheduled future instead of
-            waiting for the API call to complete.
-
-        .. deprecated:: 1.6
-            Use `AsyncioGspreadWorksheet.delete_rows()` instead.
-        """
-        warnings.warn(
-            "delete_row will be removed in a future version of gspread, use .delete_rows()",
-            DeprecationWarning,
-        )
-        return await self.agcm._call(self.ws.delete_rows, index)
-
-    @_nowait
     async def delete_rows(self, index: int, end_index: Optional[int] = None):
         """Deletes multiple rows from the worksheet starting at the specified
         index. Wraps :meth:`gspread.Worksheet.delete_rows`.
@@ -1801,47 +1751,6 @@ class AsyncioGspreadWorksheet(object):
         .. versionadded:: 1.2
         """
         return await self.agcm._call(self.ws.delete_rows, index, end_index=end_index)
-
-    async def duplicate(
-        self,
-        insert_sheet_index: int = None,
-        new_sheet_id: int = None,
-        new_sheet_name: str = None,
-    ) -> "AsyncioGspreadWorksheet":
-        """Duplicate the sheet.
-
-        :param int insert_sheet_index: (optional) The zero-based index
-            where the new sheet should be inserted. The index of all sheets
-            after this are incremented.
-        :param int new_sheet_id: (optional) The ID of the new sheet.
-            If not set, an ID is chosen. If set, the ID must not conflict with
-            any existing sheet ID. If set, it must be non-negative.
-        :param str new_sheet_name: (optional) The name of the new sheet.
-            If empty, a new name is chosen for you.
-
-        :returns: a newly created :class:`AsyncioGspreadWorksheet`.
-
-        .. warning::
-
-            This breaks caching assumptions in AsyncioGspreadSpreadsheet.
-            Its use is not recommended and it will be removed in a future version.
-
-        .. versionadded:: 1.6
-
-        .. deprecated:: 1.9
-            Use `AsyncioGspreadSpreadsheet.duplicate_sheet` instead.
-        """
-        warnings.warn(
-            "duplicate() will be removed in a future version of gspread_asyncio, use duplicate_sheet()",
-            DeprecationWarning,
-        )
-        dup_ws = await self.agcm._call(
-            self.ws.duplicate,
-            insert_sheet_index=insert_sheet_index,
-            new_sheet_id=new_sheet_id,
-            new_sheet_name=new_sheet_name,
-        )
-        return AsyncioGspreadWorksheet(self.agcm, dup_ws)
 
     async def find(
         self,
@@ -2196,9 +2105,9 @@ class AsyncioGspreadWorksheet(object):
         return self.ws.id
 
     @property
-    def index(self) -> str:
+    def index(self) -> int:
         """:returns: Worksheet index.
-        :rtype: str
+        :rtype: int
 
         .. versionadded:: 1.6
         """
@@ -2610,8 +2519,8 @@ class AsyncioGspreadWorksheet(object):
     @_nowait
     async def update(
         self,
-        range_name: str,
         values: List[List],
+        range_name: Optional[str] = None,
         raw=True,
         major_dimension: str = None,
         value_input_option: gspread.utils.ValueInputOption = None,
@@ -2622,9 +2531,9 @@ class AsyncioGspreadWorksheet(object):
         """Sets values in a cell range of the sheet. Wraps
         :meth:`gspread.Worksheet.update`.
 
+        :param list values: The data to be written.
         :param str range_name: The A1 notation of the values
              to update.
-        :param list values: The data to be written.
         :param bool raw: The values will not be parsed by Sheets API and will
              be stored as-is. For example, formulas will be rendered as plain
              strings. Defaults to ``True``. This is a shortcut for
@@ -2650,8 +2559,8 @@ class AsyncioGspreadWorksheet(object):
         """
         return await self.agcm._call(
             self.ws.update,
-            range_name,
             values,
+            range_name=range_name,
             raw=raw,
             major_dimension=major_dimension,
             value_input_option=value_input_option,

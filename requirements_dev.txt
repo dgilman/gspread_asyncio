@@ -32,7 +32,7 @@ google-auth==2.27.0
     #   gspread
 google-auth-oauthlib==1.2.0
     # via gspread
-gspread==5.10.0
+gspread==6.0.1
     # via
     #   -r docs/requirements.in
     #   -r requirements.in
@@ -117,6 +117,8 @@ sphinxcontrib-serializinghtml==1.1.10
     # via sphinx
 sphinxcontrib-trio==1.1.2
     # via -r docs/requirements.in
+strenum==0.4.15
+    # via gspread
 urllib3==2.2.0
     # via requests
 wheel==0.42.0
