@@ -1849,7 +1849,7 @@ class AsyncioGspreadWorksheet(object):
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.format, rows=rows, cols=cols)
+        return await self.agcm._call(self.ws.freeze, rows=rows, cols=cols)
 
     @property
     def frozen_row_count(self) -> int:
