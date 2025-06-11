@@ -34,6 +34,9 @@ if TYPE_CHECKING:
     ]
 
 
+logger = logging.getLogger(__name__)
+
+
 def _nowait(f):
     @functools.wraps(f)
     async def wrapper(*args, **kwargs):
@@ -146,7 +149,7 @@ class AsyncioGspreadClientManager(object):
         :param args: positional arguments for the gspread class method
         :param kwargs: keyword arguments for the gspread class method
         """
-        logging.debug(
+        logger.debug(
             "Calling {0} {1} {2}".format(method.__name__, str(args), str(kwargs))
         )
 
@@ -181,7 +184,7 @@ class AsyncioGspreadClientManager(object):
         # By default, retry forever because sometimes Google just poops out and gives us a 500.
         # Subclass this to get custom error handling, backoff, jitter,
         # maybe even some cancellation
-        logging.error(
+        logger.error(
             "Error while calling {0} {1} {2}. Sleeping for {3} seconds.".format(
                 method.__name__, str(args), str(kwargs), self.gspread_delay
             )
@@ -208,7 +211,7 @@ class AsyncioGspreadClientManager(object):
         :param kwargs: keyword arguments for the gspread class method
         """
         # By default, retry forever.
-        logging.error(
+        logger.error(
             "Error while calling {0} {1} {2}. Sleeping for {3} seconds.".format(
                 method.__name__, str(args), str(kwargs), self.gspread_delay
             )
