@@ -83,7 +83,7 @@ class AsyncioGspreadClientManager(object):
     :param loop: (optional) The asyncio event loop to use.
     :type loop: :py:class:`~asyncio.AbstractEventLoop`
     :param float cell_flush_delay: (optional) Currently unused
-    :param gspread_timeout: (optional) gspread's :meth:`gspread.client.Client.set_timeout`.
+    :param gspread_timeout: (optional) gspread's :meth:`gspread.Client.set_timeout`.
     :type gspread_timeout: float, Tuple[float, float], None
 
     .. versionchanged:: v3
@@ -169,16 +169,16 @@ class AsyncioGspreadClientManager(object):
         backoff, or jitter.
 
         The default implementation logs the error and sleeps for
-        :attr:`gspread_delay` seconds. It does not throw an exception
+        ``gspread_delay`` seconds. It does not throw an exception
         of its own so it keeps retrying failed requests forever.
 
         gspread throws an :class:`~gspread.exceptions.APIError` when an error is
         returned from the Google API. `Google has some documentation on their
         HTTP status codes <https://cloud.google.com/apis/design/errors>`_.
         gspread makes a :class:`requests.Response` object accessible at
-        :attr:`e.response`.
+        ``e.response``.
 
-        Note that the internal :meth:`_call` method which invokes this method
+        Note that the internal ``_call`` method which invokes this method
         will not do so for any HTTP 400 statuses. These are errors that arise
         from mistaken usage of the Google API and are fatal. The exception is
         status code 429, the rate limiting status, to let this code handle
@@ -207,7 +207,7 @@ class AsyncioGspreadClientManager(object):
         custom error handling, error logging, rate limiting, backoff, or jitter.
 
         The default implementation logs the error and sleeps for
-        :attr:`gspread_delay` seconds. It does not throw an exception of its own
+        ``gspread_delay`` seconds. It does not throw an exception of its own
         so it keeps retrying failed requests forever.
 
         gspread throws a :class:`~requests.RequestException` when a socket layer
@@ -234,7 +234,7 @@ class AsyncioGspreadClientManager(object):
 
         The default implementation figures out the delta between the last Google
         API call and now and sleeps for the delta if it is less than
-        :attr:`gspread_delay`.
+        ``gspread_delay``.
         """
         # Subclass this to customize rate limiting
         now = self._loop.time()
@@ -306,7 +306,7 @@ class AsyncioGspreadClient(object):
     @property
     def expiry(self) -> "Optional[datetime]":
         """:returns: The expiry date of the currently loaded credentials, or
-            :const:`None`. Wraps :attr:`gspread.client.Client.expiry`.
+            :obj:`None`. Wraps :attr:`gspread.Client.expiry`.
         :rtype: :py:class:`~datetime.datetime`, None
 
         .. note::
@@ -415,15 +415,15 @@ class AsyncioGspreadClient(object):
         :param str format: The format of the resulting file.
             Possible values are:
 
-                * :data:`gspread.utils.ExportFormat.PDF`
-                * :data:`gspread.utils.ExportFormat.EXCEL`
-                * :data:`gspread.utils.ExportFormat.CSV`
-                * :data:`gspread.utils.ExportFormat.OPEN_OFFICE_SHEET`
-                * :data:`gspread.utils.ExportFormat.TSV`
-                * :data:`gspread.utils.ExportFormat.ZIPPED_HTML`
+                * :attr:`gspread.utils.ExportFormat.PDF`
+                * :attr:`gspread.utils.ExportFormat.EXCEL`
+                * :attr:`gspread.utils.ExportFormat.CSV`
+                * :attr:`gspread.utils.ExportFormat.OPEN_OFFICE_SHEET`
+                * :attr:`gspread.utils.ExportFormat.TSV`
+                * :attr:`gspread.utils.ExportFormat.ZIPPED_HTML`
 
             See `ExportFormat`_ in the Drive API.
-        :type format: :data:`gspread.utils.ExportFormat`
+        :type format: :class:`gspread.utils.ExportFormat`
 
         :returns: The content of the exported file.
         :rtype: bytes
@@ -709,7 +709,7 @@ class AsyncioGspreadSpreadsheet(object):
         new_sheet_id: int = None,
         new_sheet_name: Optional[str] = None,
     ) -> "AsyncioGspreadWorksheet":
-        """Duplicates the contents of a sheet. Wraps :meth:`gspread.Worksheet.duplicate_sheet`.
+        """Duplicates the contents of a sheet. Wraps :meth:`gspread.Spreadsheet.duplicate_sheet`.
 
         :param int source_sheet_id: The sheet ID to duplicate.
         :param int insert_sheet_index: (optional) The zero-based index
@@ -742,15 +742,15 @@ class AsyncioGspreadSpreadsheet(object):
         :param str format: The format of the resulting file.
             Possible values are:
 
-                * :data:`gspread.utils.ExportFormat.PDF`
-                * :data:`gspread.utils.ExportFormat.EXCEL`
-                * :data:`gspread.utils.ExportFormat.CSV`
-                * :data:`gspread.utils.ExportFormat.OPEN_OFFICE_SHEET`
-                * :data:`gspread.utils.ExportFormat.TSV`
-                * :data:`gspread.utils.ExportFormat.ZIPPED_HTML`
+                * :attr:`gspread.utils.ExportFormat.PDF`
+                * :attr:`gspread.utils.ExportFormat.EXCEL`
+                * :attr:`gspread.utils.ExportFormat.CSV`
+                * :attr:`gspread.utils.ExportFormat.OPEN_OFFICE_SHEET`
+                * :attr:`gspread.utils.ExportFormat.TSV`
+                * :attr:`gspread.utils.ExportFormat.ZIPPED_HTML`
 
             See `ExportFormat`_ in the Drive API.
-        :type format: :data:`gspread.utils.ExportFormat`
+        :type format: :class:`gspread.utils.ExportFormat`
 
         :returns: The content of the exported file.
         :rtype: bytes
@@ -863,17 +863,17 @@ class AsyncioGspreadSpreadsheet(object):
         :meth:`gspread.Spreadsheet.share`.
 
         :param str email_address: user or group e-mail address, domain name
-            or :const:`None` for ``'anyone'`` type.
+            or :obj:`None` for ``'anyone'`` type.
         :param str perm_type: The account type. Allowed values are:
             ``user``, ``group``, ``domain``, ``anyone``.
         :param str role: the primary role for this user. Allowed values are:
             ``owner``, ``writer``, ``reader``.
         :param bool notify: (optional) Whether to send an email to the target
-            user/domain. Defaults to :const:`True`.
+            user/domain. Defaults to :obj:`True`.
         :param str email_message: (optional) The email to be sent if
-            ``notify`` is :const:`True`.
+            ``notify`` is :obj:`True`.
         :param bool with_link: (optional) Whether the link is required for this
-            permission to be active. Defaults to :const:`False`.
+            permission to be active. Defaults to :obj:`False`.
         :param bool nowait: (optional) If true, return a scheduled future instead
             of waiting for the API call to complete.
 
@@ -914,7 +914,7 @@ class AsyncioGspreadSpreadsheet(object):
 
     @property
     def locale(self) -> str:
-        """Spreadsheet locale. Wraps :meth:`gspread.Spreadsheet.locale`.
+        """Spreadsheet locale. Wraps :attr:`gspread.Spreadsheet.locale`.
 
         :rtype: :py:class:`str`
 
@@ -994,7 +994,7 @@ class AsyncioGspreadSpreadsheet(object):
         self, worksheets_in_desired_order: "Iterable[AsyncioGspreadWorksheet]"
     ):
         """Updates the ``index`` property of each Worksheet to reflect
-        its index in the provided sequence of Worksheets. Wraps :meth:`gspread.worksheet.Worksheet.reorder_worksheet`.
+        its index in the provided sequence of Worksheets. Wraps :meth:`gspread.Spreadsheet.reorder_worksheets`.
 
         :param worksheets_in_desired_order: Iterable of Worksheet objects in desired order.
         :type worksheets_in_desired_order: :class:`~typing.Iterable`\\[:class:`AsyncioGspreadSpreadsheet`\\]
@@ -1743,7 +1743,7 @@ class AsyncioGspreadWorksheet(object):
         """Returns a list of all values in column `col`. Wraps
         :meth:`gspread.Worksheet.col_values`.
 
-        Empty cells in this list will be rendered as :const:`None`.
+        Empty cells in this list will be rendered as :obj:`None`.
 
         :param col: Column number.
         :type col: int
@@ -2106,9 +2106,9 @@ class AsyncioGspreadWorksheet(object):
             row are padded so that every row has the same length. Defaults to
             False.
         :param return_type: (optional) The type of object to return. One of
-            :data:`gspread.utils.GridRangeType.ValueRange` (default) or
-            :data:`gspread.utils.GridRangeType.ListOfLists`.
-        :type return_type: :data:`gspread.utils.GridRangeType`
+            :attr:`gspread.utils.GridRangeType.ValueRange` (default) or
+            :attr:`gspread.utils.GridRangeType.ListOfLists`.
+        :type return_type: :class:`gspread.utils.GridRangeType`
 
         :rtype: :class:`gspread.worksheet.ValueRange`
 
@@ -2216,11 +2216,11 @@ class AsyncioGspreadWorksheet(object):
         :param str top_left_range_name: (optional) The top-left cell to start
             expanding from, in A1 notation. Defaults to ``A1``.
         :param direction: (optional) The direction in which to expand.
-            One of :data:`gspread.utils.TableDirection.table`,
-            :data:`gspread.utils.TableDirection.down`, or
-            :data:`gspread.utils.TableDirection.right`.
+            One of :attr:`gspread.utils.TableDirection.table`,
+            :attr:`gspread.utils.TableDirection.down`, or
+            :attr:`gspread.utils.TableDirection.right`.
             Defaults to ``TableDirection.table``.
-        :type direction: :data:`gspread.utils.TableDirection`
+        :type direction: :class:`gspread.utils.TableDirection`
 
         :rtype: :class:`~typing.List`\\[:class:`~typing.List`\\[:class:`str`\\]\\]
 
@@ -2251,7 +2251,7 @@ class AsyncioGspreadWorksheet(object):
         :meth:`gspread.Worksheet.get_notes`.
 
         :param default_empty_value: (optional) Value used to fill in cells that
-            have no note. Defaults to the empty string. Pass :const:`None` to
+            have no note. Defaults to the empty string. Pass :obj:`None` to
             leave such cells missing from the returned rows.
         :type default_empty_value: str, None
         :param str grid_range: (optional) Range in A1 notation to restrict the
@@ -2350,9 +2350,9 @@ class AsyncioGspreadWorksheet(object):
             row are padded so that every row has the same length. Defaults to
             True.
         :param return_type: (optional) The type of object to return. One of
-            :data:`gspread.utils.GridRangeType.ListOfLists` (default) or
-            :data:`gspread.utils.GridRangeType.ValueRange`.
-        :type return_type: :data:`gspread.utils.GridRangeType`
+            :attr:`gspread.utils.GridRangeType.ListOfLists` (default) or
+            :attr:`gspread.utils.GridRangeType.ValueRange`.
+        :type return_type: :class:`gspread.utils.GridRangeType`
 
         :rtype: :class:`~typing.List`\\[:class:`~typing.List`\\]
 
@@ -2677,8 +2677,8 @@ class AsyncioGspreadWorksheet(object):
             ``mergeType`` falls back to the ``merge_type`` argument below.
         :param merge_type: (optional) Default merge type for entries that do not
             specify their own. One of ``MERGE_ALL``, ``MERGE_COLUMNS``, or
-            ``MERGE_ROWS``. Defaults to :data:`gspread.utils.MergeType.merge_all`.
-        :type merge_type: :data:`gspread.utils.MergeType`
+            ``MERGE_ROWS``. Defaults to :attr:`gspread.utils.MergeType.merge_all`.
+        :type merge_type: :class:`gspread.utils.MergeType`
 
         :returns: the response body from the request
         :rtype: dict
@@ -2740,7 +2740,7 @@ class AsyncioGspreadWorksheet(object):
         """Returns a list of all values in a `row`. Wraps
         :meth:`gspread.Worksheet.row_values`.
 
-        Empty cells in this list will be rendered as :const:`None`.
+        Empty cells in this list will be rendered as :obj:`None`.
 
         :param int row: Row number.
         :param `gspread.utils.ValueRenderOption` value_render_option:
@@ -2802,15 +2802,15 @@ class AsyncioGspreadWorksheet(object):
         :param condition_type: The type of condition to apply. See
             :class:`gspread.utils.ValidationConditionType` for the available
             values.
-        :type condition_type: :data:`gspread.utils.ValidationConditionType`
+        :type condition_type: :class:`gspread.utils.ValidationConditionType`
         :param list values: List of values used by the condition (the meaning
             depends on ``condition_type``).
         :param str inputMessage: (optional) Message shown to the user when
             adding data to the cell.
-        :param bool strict: (optional) If :const:`True`, reject invalid input.
-            Defaults to :const:`False`.
-        :param bool showCustomUi: (optional) If :const:`True`, display a dropdown
-            in the cell. Defaults to :const:`False`.
+        :param bool strict: (optional) If :obj:`True`, reject invalid input.
+            Defaults to :obj:`False`.
+        :param bool showCustomUi: (optional) If :obj:`True`, display a dropdown
+            in the cell. Defaults to :obj:`False`.
 
         Example::
 
@@ -3069,7 +3069,7 @@ class AsyncioGspreadWorksheet(object):
         return await self.agcm._call(self.ws.update_tab_color, color)
 
     async def get_tab_color(self) -> Optional[str]:
-        """Get the worksheet's tab color, or :const:`None` if it has no
+        """Get the worksheet's tab color, or :obj:`None` if it has no
         custom color. Wraps :meth:`gspread.Worksheet.get_tab_color`.
 
         :rtype: :class:`str`, None
