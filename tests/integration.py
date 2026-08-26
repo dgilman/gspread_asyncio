@@ -50,9 +50,7 @@ class Smoketest(unittest.TestCase):
         self.assertIsInstance(agc, gspread_asyncio.AsyncioGspreadClient)
 
         ss = await agc.create("Smoketest Spreadsheet")
-        print(
-            "Spreadsheet URL: https://docs.google.com/spreadsheets/d/{0}".format(ss.id)
-        )
+        print(f"Spreadsheet URL: https://docs.google.com/spreadsheets/d/{ss.id}")
         self.assertIsInstance(ss, gspread_asyncio.AsyncioGspreadSpreadsheet)
         self.assertEqual(1, len(agc._ss_cache_key))
         self.assertEqual(1, len(agc._ss_cache_title))
@@ -70,7 +68,7 @@ class Smoketest(unittest.TestCase):
 
         for row in range(1, 3):
             for col in range(1, 3):
-                val = "{0}/{1}".format(row, col)
+                val = f"{row}/{col}"
                 await ws.update_cell(row, col, val)
                 cell = await ws.cell(row, col)
                 self.assertEqual(cell.value, val)
@@ -84,7 +82,7 @@ class Smoketest(unittest.TestCase):
         )
         self.assertEqual(await ws.expand("A1"), [["1/1", "1/2"], ["2/1", "2/2"]])
 
-        rng = "'{0}'!A1:B2".format(ws.title)
+        rng = f"'{ws.title}'!A1:B2"
 
         # values_batch_update overwrites the same block in a single call...
         await ss.values_batch_update(

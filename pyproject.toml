@@ -3,8 +3,11 @@ target-version = "py311"
 line-length = 88
 
 [tool.ruff.lint]
-# Enable isort import sorting rules.
-select = ["I"]
+select = ["I", "F", "B", "UP", "SIM", "C4", "RUF", "ASYNC", "FURB", "E", "W"]
+preview = true
+ignore = [
+    "RUF067",
+]
 
 [tool.ruff.lint.isort]
 # Preserve the isort settings previously used with black.
