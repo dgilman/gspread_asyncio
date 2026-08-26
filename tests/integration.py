@@ -80,9 +80,47 @@ class Smoketest(unittest.TestCase):
 
         self.assertEqual(await ws.get_values(), [["1/1", "1/2"], ["2/1", "2/2"]])
 
+        cells = await ws.get_all_cells()
+        self.assertEqual(
+            {cell.value for cell in cells if cell.value},
+            {"1/1", "1/2", "2/1", "2/2"},
+        )
+        self.assertEqual(await ws.expand("A1"), [["1/1", "1/2"], ["2/1", "2/2"]])
+
+        rng = "'{0}'!A1:B2".format(ws.title)
+
+        # values_batch_update overwrites the same block in a single call...
+        await ss.values_batch_update(
+            body={
+                "valueInputOption": "RAW",
+                "data": [{"range": rng, "values": [["a", "b"], ["c", "d"]]}],
+            }
+        )
+        self.assertEqual(await ws.get_values(), [["a", "b"], ["c", "d"]])
+
+        # ...and values_batch_clear wipes it back out.
+        await ss.values_batch_clear(body={"ranges": [rng]})
+        cleared = await ws.get_values()
+        self.assertEqual([v for row in cleared for v in row if v], [])
+
+        # is_gridlines_hidden: False by default, True after hiding. hide_gridlines
+        # doesn't mutate the local properties, so re-fetch to observe the change.
+        self.assertIs(ws.is_gridlines_hidden, False)
+        await ws.hide_gridlines()
+        ws_refetched = await ss.get_worksheet_by_id(ws.id)
+        self.assertIs(ws_refetched.is_gridlines_hidden, True)
+
         await ws.freeze(rows=1, cols=1)
         self.assertEqual(1, ws.frozen_row_count)
         self.assertEqual(1, ws.frozen_col_count)
+
+        ws_del = await ss.add_worksheet("Throwaway Worksheet", 1, 1)
+        del_id = ws_del.id
+        self.assertIn("Throwaway Worksheet", ss._ws_cache_title)
+        del_idx = ws_del.ws._properties["index"]
+        await ss.del_worksheet_by_id(del_id)
+        self.assertNotIn("Throwaway Worksheet", ss._ws_cache_title)
+        self.assertNotIn(del_idx, ss._ws_cache_idx)
 
         await ss.del_worksheet(ws)
         self.assertEqual(0, len(ss._ws_cache_idx))
