@@ -10,6 +10,8 @@ import datetime
 import os
 import sys
 
+from sphinx.ext.intersphinx import missing_reference as _intersphinx_missing_reference
+
 sys.path.insert(0, os.path.abspath(".."))
 
 TODAY = datetime.date.today()
@@ -59,8 +61,6 @@ intersphinx_mapping = {
 
 autodoc_typehints = "none"
 
-
-from sphinx.ext.intersphinx import missing_reference as _intersphinx_missing_reference
 
 # linkify short names for classes
 _GSPREAD_ALIASES = {

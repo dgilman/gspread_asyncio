@@ -35,10 +35,7 @@ def get_creds_google_oauth2():
 
 def async_test(f):
     def wrapper(*args, **kwargs):
-        loop = asyncio.new_event_loop()
-        loop.set_debug(True)
-        loop.run_until_complete(f(*args, **kwargs))
-        loop.close()
+        asyncio.run(f(*args, **kwargs), debug=True)
 
     return wrapper
 

@@ -1,6 +1,7 @@
 import asyncio
 import functools
 import logging
+import time
 from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import requests
@@ -80,8 +81,6 @@ class AsyncioGspreadClientManager(object):
     :param int reauth_interval: (optional) The default delay (in minutes)
         before the :class:`~gspread_asyncio.AsyncioGspreadClientManager`
         requests new credentials.
-    :param loop: (optional) The asyncio event loop to use.
-    :type loop: :py:class:`~asyncio.AbstractEventLoop`
     :param float cell_flush_delay: (optional) Currently unused
     :param gspread_timeout: (optional) gspread's :meth:`gspread.Client.set_timeout`.
     :type gspread_timeout: float, Tuple[float, float], None
@@ -95,12 +94,10 @@ class AsyncioGspreadClientManager(object):
         credentials_fn: "Callable[[], CredentialTypes]",
         gspread_delay: float = 1.1,
         reauth_interval: int = 45,
-        loop: asyncio.AbstractEventLoop = None,
         cell_flush_delay: float = 5.0,
         gspread_timeout: "Optional[Union[float, Tuple[float, float]]]" = None,
     ):
         self.credentials_fn = credentials_fn
-        self._loop = loop
 
         # seconds
         self.gspread_delay = gspread_delay
@@ -127,11 +124,10 @@ class AsyncioGspreadClientManager(object):
         while True:
             await self.call_lock.acquire()
             try:
-                fn = functools.partial(method, *args, **kwargs)
                 for _ in range(api_call_count):
                     await self.delay()
                 await self.before_gspread_call(method, args, kwargs)
-                rval = await self._loop.run_in_executor(None, fn)
+                rval = await asyncio.to_thread(method, *args, **kwargs)
                 return rval
             except gspread.exceptions.APIError as e:
                 code = e.response.status_code
@@ -237,7 +233,7 @@ class AsyncioGspreadClientManager(object):
         ``gspread_delay``.
         """
         # Subclass this to customize rate limiting
-        now = self._loop.time()
+        now = time.monotonic()
         if self.last_call is None:
             self.last_call = now
             return
@@ -246,7 +242,7 @@ class AsyncioGspreadClientManager(object):
             self.last_call = now
             return
         await asyncio.sleep(self.gspread_delay - delta)
-        self.last_call = self._loop.time()
+        self.last_call = time.monotonic()
         return
 
     async def authorize(self) -> "AsyncioGspreadClient":
@@ -260,9 +256,6 @@ class AsyncioGspreadClientManager(object):
 
         :returns: a ready-to-use :class:`~gspread_asyncio.AsyncioGspreadClient`
         """
-        if self._loop is None:
-            self._loop = asyncio.get_running_loop()
-
         await self.auth_lock.acquire()
         try:
             return await self._authorize()
@@ -270,11 +263,11 @@ class AsyncioGspreadClientManager(object):
             self.auth_lock.release()
 
     async def _authorize(self):
-        now = self._loop.time()
+        now = time.monotonic()
         if self.auth_time is None or self.auth_time + self.reauth_interval < now:
-            creds = await self._loop.run_in_executor(None, self.credentials_fn)
-            gc = await self._loop.run_in_executor(None, gspread.authorize, creds)
-            await self._loop.run_in_executor(None, gc.set_timeout, self.gspread_timeout)
+            creds = await asyncio.to_thread(self.credentials_fn)
+            gc = await asyncio.to_thread(gspread.authorize, creds)
+            await asyncio.to_thread(gc.set_timeout, self.gspread_timeout)
             agc = AsyncioGspreadClient(self, gc)
             self._agc_cache[now] = agc
             if self.auth_time is not None and self.auth_time in self._agc_cache:
