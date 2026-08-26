@@ -56,7 +56,7 @@ def _nowait(f):
     return wrapper
 
 
-class AsyncioGspreadClientManager:
+class ClientManager:
     """Users of :mod:`gspread_asyncio` should instantiate this class and
     store it for the duration of their program.
 
@@ -79,7 +79,7 @@ class AsyncioGspreadClientManager:
         choice as it allows for some variance that creeps into Google's rate
         limit calculations.
     :param int reauth_interval: (optional) The default delay (in minutes)
-        before the :class:`~gspread_asyncio.AsyncioGspreadClientManager`
+        before the :class:`~gspread_asyncio.ClientManager`
         requests new credentials.
     :param float cell_flush_delay: (optional) Currently unused
     :param gspread_timeout: (optional) gspread's :meth:`gspread.Client.set_timeout`.
@@ -106,7 +106,7 @@ class AsyncioGspreadClientManager:
         # arg is minutes, the stored value is seconds
         self.reauth_interval = reauth_interval * 60
 
-        self._agc_cache: dict[float, AsyncioGspreadClient] = {}
+        self._client_cache: dict[float, Client] = {}
         self.auth_time: float | None = None
         self.auth_lock = asyncio.Lock()
         self.last_call: float | None = None
@@ -239,16 +239,16 @@ class AsyncioGspreadClientManager:
         self.last_call = time.monotonic()
         return
 
-    async def authorize(self) -> "AsyncioGspreadClient":
+    async def authorize(self) -> "Client":
         """(Re)-authenticates an
-        :class:`~gspread_asyncio.AsyncioGspreadClientManager`. You **must**
+        :class:`~gspread_asyncio.ClientManager`. You **must**
         call this method first to log in to the Google Spreadsheets API.
 
         Feel free to call this method often, even in a loop, as it caches
         Google's credentials and only re-authenticates when the credentials are
         nearing expiration.
 
-        :returns: a ready-to-use :class:`~gspread_asyncio.AsyncioGspreadClient`
+        :returns: a ready-to-use :class:`~gspread_asyncio.Client`
         """
         await self.auth_lock.acquire()
         try:
@@ -262,30 +262,30 @@ class AsyncioGspreadClientManager:
             creds = await asyncio.to_thread(self.credentials_fn)
             gc = await asyncio.to_thread(gspread.authorize, creds)
             await asyncio.to_thread(gc.set_timeout, self.gspread_timeout)
-            agc = AsyncioGspreadClient(self, gc)
-            self._agc_cache[now] = agc
-            if self.auth_time is not None and self.auth_time in self._agc_cache:
-                del self._agc_cache[self.auth_time]
+            c = Client(self, gc)
+            self._client_cache[now] = c
+            if self.auth_time is not None and self.auth_time in self._client_cache:
+                del self._client_cache[self.auth_time]
             self.auth_time = now
         else:
-            agc = self._agc_cache[self.auth_time]
-        return agc
+            c = self._client_cache[self.auth_time]
+        return c
 
 
-class AsyncioGspreadClient:
+class Client:
     """An :mod:`asyncio` wrapper for :class:`gspread.Client`. You **must**
     obtain instances of this class from
-    :meth:`gspread_asyncio.AsyncioGspreadClientManager.authorize`.
+    :meth:`gspread_asyncio.ClientManager.authorize`.
     """
 
-    def __init__(self, agcm: AsyncioGspreadClientManager, gc: gspread.Client):
-        self.agcm = agcm
+    def __init__(self, cm: ClientManager, gc: gspread.Client):
+        self.cm = cm
         self.gc = gc
-        self._ss_cache_title: dict[str, AsyncioGspreadSpreadsheet] = {}
-        self._ss_cache_key: dict[str, AsyncioGspreadSpreadsheet] = {}
+        self._ss_cache_title: dict[str, Spreadsheet] = {}
+        self._ss_cache_key: dict[str, Spreadsheet] = {}
 
-    def _wrap_ss(self, ss: gspread.Spreadsheet) -> "AsyncioGspreadSpreadsheet":
-        ass = AsyncioGspreadSpreadsheet(self.agcm, ss)
+    def _wrap_ss(self, ss: gspread.Spreadsheet) -> "Spreadsheet":
+        ass = Spreadsheet(self.cm, ss)
         self._ss_cache_title[ss.title] = ass
         self._ss_cache_key[ss.id] = ass
         return ass
@@ -298,10 +298,10 @@ class AsyncioGspreadClient:
 
         .. note::
             This only applies to clients created using OAuth. Note also that the
-            :class:`~gspread_asyncio.AsyncioGspreadClientManager` transparently
+            :class:`~gspread_asyncio.ClientManager` transparently
             re-authenticates, so this reflects the credentials backing the client
             at the moment it was handed to you by
-            :meth:`~gspread_asyncio.AsyncioGspreadClientManager.authorize`.
+            :meth:`~gspread_asyncio.ClientManager.authorize`.
 
         .. versionadded:: v3
         """
@@ -315,7 +315,7 @@ class AsyncioGspreadClient:
         copy_permissions: bool = False,
         folder_id: str | None = None,
         copy_comments: bool = True,
-    ) -> "AsyncioGspreadSpreadsheet":
+    ) -> "Spreadsheet":
         """Copies a spreadsheet.
 
         :param str file_id: A key of a spreadsheet to copy.
@@ -329,7 +329,7 @@ class AsyncioGspreadClient:
         :param bool nowait: (optional) If true, return a scheduled future instead
             of waiting for the API call to complete.
 
-        :returns: a :class:`~gspread_asyncio.AsyncioGspreadSpreadsheet` instance.
+        :returns: a :class:`~gspread_asyncio.Spreadsheet` instance.
 
         .. versionadded:: 1.6
         .. note::
@@ -345,7 +345,7 @@ class AsyncioGspreadClient:
 
             Otherwise, you will get an ``Insufficient Permission`` error
             when you try to copy a spreadsheet."""
-        ss = await self.agcm._call(
+        ss = await self.cm._call(
             self.gc.copy,
             file_id,
             title=title,
@@ -358,15 +358,15 @@ class AsyncioGspreadClient:
 
     async def create(
         self, title: str, folder_id: str | None = None
-    ) -> "AsyncioGspreadSpreadsheet":
+    ) -> "Spreadsheet":
         """Create a new Google Spreadsheet. Wraps
         :meth:`gspread.Client.create`.
 
         :param str title: Human-readable name of the new spreadsheet.
         :param str folder_id: Id of the folder where we want to save the spreadsheet.
-        :rtype: :class:`gspread_asyncio.AsyncioGspreadSpreadsheet`
+        :rtype: :class:`gspread_asyncio.Spreadsheet`
         """
-        ss = await self.agcm._call(self.gc.create, title, folder_id)
+        ss = await self.cm._call(self.gc.create, title, folder_id)
         ass = self._wrap_ss(ss)
         return ass
 
@@ -389,7 +389,7 @@ class AsyncioGspreadClient:
         for title in titles:
             del self._ss_cache_title[title]
 
-        return await self.agcm._call(self.gc.del_spreadsheet, file_id)
+        return await self.cm._call(self.gc.del_spreadsheet, file_id)
 
     async def export(
         self,
@@ -419,7 +419,7 @@ class AsyncioGspreadClient:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.gc.export,
             file_id,
             format=format,
@@ -436,7 +436,7 @@ class AsyncioGspreadClient:
         :param bool nowait: (optional) If true, return a scheduled future instead
             of waiting for the API call to complete.
         """
-        return await self.agcm._call(self.gc.import_csv, file_id, data)
+        return await self.cm._call(self.gc.import_csv, file_id, data)
 
     @_nowait
     async def insert_permission(
@@ -468,7 +468,7 @@ class AsyncioGspreadClient:
         :param bool nowait: (optional) If true, return a scheduled future instead of
             waiting for the API call to complete.
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.gc.insert_permission,
             file_id,
             value,
@@ -488,19 +488,19 @@ class AsyncioGspreadClient:
         :returns: Some kind of object with permissions in it. I don't know,
             the author of gspread forgot to document it.
         """
-        return await self.agcm._call(self.gc.list_permissions, file_id)
+        return await self.cm._call(self.gc.list_permissions, file_id)
 
     # N.B. list_spreadsheet_files does multiple calls, would require monkeypatching
     # to implement here.
 
     async def login(self):
         raise NotImplementedError(
-            "Use AsyncioGspreadClientManager.authorize() to create a gspread client"
+            "Use ClientManager.authorize() to create a gspread client"
         )
 
     async def open(
         self, title: str, folder_id: str | None = None
-    ) -> "AsyncioGspreadSpreadsheet":
+    ) -> "Spreadsheet":
         """Opens a Google Spreadsheet by title. Wraps
         :meth:`gspread.Client.open`.
 
@@ -510,17 +510,17 @@ class AsyncioGspreadClient:
         :param str title: The title of the spreadsheet
         :param str folder_id: (optional) If specified, only spreadsheets with
             this parent folder ID are considered.
-        :rtype: :class:`~gspread_asyncio.AsyncioGspreadSpreadsheet`
+        :rtype: :class:`~gspread_asyncio.Spreadsheet`
         """
         # The title cache is not folder-aware, so bypass it when a folder is
         # given: two spreadsheets in different folders can share a title.
         if folder_id is None and title in self._ss_cache_title:
             return self._ss_cache_title[title]
-        ss = await self.agcm._call(self.gc.open, title, folder_id=folder_id)
+        ss = await self.cm._call(self.gc.open, title, folder_id=folder_id)
         ass = self._wrap_ss(ss)
         return ass
 
-    async def open_by_key(self, key: str) -> "AsyncioGspreadSpreadsheet":
+    async def open_by_key(self, key: str) -> "Spreadsheet":
         """Opens a Google Spreadsheet by spreasheet id. Wraps
         :meth:`gspread.Client.open_by_key`.
 
@@ -528,15 +528,15 @@ class AsyncioGspreadClient:
         the underlying spreadsheet object.
 
         :param str key: Google's spreadsheet id
-        :rtype: :class:`~gspread_asyncio.AsyncioGspreadSpreadsheet`
+        :rtype: :class:`~gspread_asyncio.Spreadsheet`
         """
         if key in self._ss_cache_key:
             return self._ss_cache_key[key]
-        ss = await self.agcm._call(self.gc.open_by_key, key)
+        ss = await self.cm._call(self.gc.open_by_key, key)
         ass = self._wrap_ss(ss)
         return ass
 
-    async def open_by_url(self, url: str) -> "AsyncioGspreadSpreadsheet":
+    async def open_by_url(self, url: str) -> "Spreadsheet":
         """Opens a Google Spreadsheet from a URL. Wraps
         :meth:`gspread.Client.open_by_url`.
 
@@ -544,14 +544,14 @@ class AsyncioGspreadClient:
         underlying spreadsheet object.
 
         :param str url: URL to a Google Spreadsheet
-        :rtype: :class:`~gspread_asyncio.AsyncioGspreadSpreadsheet`
+        :rtype: :class:`~gspread_asyncio.Spreadsheet`
         """
         ss_id = extract_id_from_url(url)
         return await self.open_by_key(ss_id)
 
     async def openall(
         self, title: str | None = None
-    ) -> "list[AsyncioGspreadSpreadsheet]":
+    ) -> "list[Spreadsheet]":
         """Open all available spreadsheets. Wraps
         :meth:`gspread.Client.openall`.
 
@@ -560,9 +560,9 @@ class AsyncioGspreadClient:
 
         :param str title: (optional) If specified can be used to filter spreadsheets
             by title.
-        :rtype: :py:class:`~typing.List`\\[:class:`~gspread_asyncio.AsyncioGspreadSpreadsheet`\\]
+        :rtype: :py:class:`~typing.List`\\[:class:`~gspread_asyncio.Spreadsheet`\\]
         """
-        sses = await self.agcm._call(self.gc.openall, title=title)
+        sses = await self.cm._call(self.gc.openall, title=title)
         asses = []
         for ss in sses:
             ass = self._wrap_ss(ss)
@@ -579,37 +579,37 @@ class AsyncioGspreadClient:
         :param bool nowait: (optional) If true, return a scheduled future instead
             of waiting for the API call to complete.
         """
-        return await self.agcm._call(self.gc.remove_permission, file_id, permission_id)
+        return await self.cm._call(self.gc.remove_permission, file_id, permission_id)
 
 
-class AsyncioGspreadSpreadsheet:
+class Spreadsheet:
     """An :mod:`asyncio` wrapper for :class:`gspread.Spreadsheet`.
     You **must** obtain instances of this class from
-    :meth:`AsyncioGspreadClient.open`,
-    :meth:`AsyncioGspreadClient.open_by_key`,
-    :meth:`AsyncioGspreadClient.open_by_url`,
-    or :meth:`AsyncioGspreadClient.openall`.
+    :meth:`Client.open`,
+    :meth:`Client.open_by_key`,
+    :meth:`Client.open_by_url`,
+    or :meth:`Client.openall`.
     """
 
-    def __init__(self, agcm, ss: gspread.Spreadsheet):
-        self.agcm = agcm
+    def __init__(self, cm, ss: gspread.Spreadsheet):
+        self.cm = cm
         self.ss = ss
 
-        self._ws_cache_title: dict[str, AsyncioGspreadWorksheet] = {}
-        self._ws_cache_idx: dict[int, AsyncioGspreadWorksheet] = {}
+        self._ws_cache_title: dict[str, Worksheet] = {}
+        self._ws_cache_idx: dict[int, Worksheet] = {}
 
     def __repr__(self):
         return f"<{self.__class__.__name__} id:{self.ss.id}>"
 
-    def _wrap_ws(self, ws: gspread.Worksheet) -> "AsyncioGspreadWorksheet":
-        aws = AsyncioGspreadWorksheet(self.agcm, ws)
+    def _wrap_ws(self, ws: gspread.Worksheet) -> "Worksheet":
+        aws = Worksheet(self.cm, ws)
         self._ws_cache_title[aws.ws.title] = aws
         self._ws_cache_idx[aws.ws._properties["index"]] = aws
         return aws
 
     async def add_worksheet(
         self, title: str, rows: int, cols: int, index: int | None = None
-    ) -> "AsyncioGspreadWorksheet":
+    ) -> "Worksheet":
         """Add new worksheet (tab) to a spreadsheet. Wraps
         :meth:`gspread.Spreadsheet.add_worksheet`.
 
@@ -617,9 +617,9 @@ class AsyncioGspreadSpreadsheet:
         :param int rows: Number of rows for the new worksheet
         :param int cols: Number of columns for the new worksheet
         :param int index: (optional) Position of the sheet
-        :rtype: :py:class:`~gspread_asyncio.AsyncioGspreadWorksheet`
+        :rtype: :py:class:`~gspread_asyncio.Worksheet`
         """
-        ws = await self.agcm._call(
+        ws = await self.cm._call(
             self.ss.add_worksheet, title, rows, cols, index=index
         )
         aws = self._wrap_ws(ws)
@@ -638,13 +638,13 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ss.batch_update, body)
+        return await self.cm._call(self.ss.batch_update, body)
 
     # creationTime / lastUpdateTime are not implemented
     # as they do i/o under the hood, with list_spreadsheet_files
 
     @_nowait
-    async def del_worksheet(self, worksheet: "AsyncioGspreadWorksheet"):
+    async def del_worksheet(self, worksheet: "Worksheet"):
         """Delete a worksheet (tab) from a spreadsheet. Wraps
         :meth:`gspread.Spreadsheet.del_worksheet`.
 
@@ -660,7 +660,7 @@ class AsyncioGspreadSpreadsheet:
         if ws_idx in self._ws_cache_idx:
             del self._ws_cache_idx[ws_idx]
 
-        return await self.agcm._call(self.ss.del_worksheet, worksheet.ws)
+        return await self.cm._call(self.ss.del_worksheet, worksheet.ws)
 
     @_nowait
     async def del_worksheet_by_id(self, worksheet_id: str | int):
@@ -687,7 +687,7 @@ class AsyncioGspreadSpreadsheet:
         for idx in idxs:
             del self._ws_cache_idx[idx]
 
-        return await self.agcm._call(self.ss.del_worksheet_by_id, worksheet_id)
+        return await self.cm._call(self.ss.del_worksheet_by_id, worksheet_id)
 
     async def duplicate_sheet(
         self,
@@ -695,7 +695,7 @@ class AsyncioGspreadSpreadsheet:
         insert_sheet_index: int | None = None,
         new_sheet_id: int | None = None,
         new_sheet_name: str | None = None,
-    ) -> "AsyncioGspreadWorksheet":
+    ) -> "Worksheet":
         """Duplicates the contents of a sheet. Wraps :meth:`gspread.Spreadsheet.duplicate_sheet`.
 
         :param int source_sheet_id: The sheet ID to duplicate.
@@ -709,11 +709,11 @@ class AsyncioGspreadSpreadsheet:
             If set, it must be non-negative.
         :param str new_sheet_name: (optional) The name of the new sheet.
             If empty, a new name is chosen for you.
-        :returns: a newly created :class:`AsyncioGspreadWorksheet`
+        :returns: a newly created :class:`Worksheet`
 
         .. versionadded:: 1.6
         """
-        ws = await self.agcm._call(
+        ws = await self.cm._call(
             self.ss.duplicate_sheet,
             source_sheet_id,
             insert_sheet_index=insert_sheet_index,
@@ -746,7 +746,7 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ss.export,
             format=format,
         )
@@ -761,7 +761,7 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: 1.8.1
         """
-        return await self.agcm._call(self.ss.fetch_sheet_metadata, params=params)
+        return await self.cm._call(self.ss.fetch_sheet_metadata, params=params)
 
     @_nowait
     async def update_drive_metadata(self):
@@ -773,9 +773,9 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: v3
         """
-        return await self.agcm._call(self.ss.update_drive_metadata)
+        return await self.cm._call(self.ss.update_drive_metadata)
 
-    async def get_worksheet(self, index: int) -> "AsyncioGspreadWorksheet":
+    async def get_worksheet(self, index: int) -> "Worksheet":
         """Retrieves a worksheet (tab) from a spreadsheet by index number.
         Indexes start from zero. Wraps
         :meth:`gspread.Spreadsheet.get_worksheet`.
@@ -784,27 +784,27 @@ class AsyncioGspreadSpreadsheet:
         underlying worksheet object.
 
         :param int index: Index of worksheet
-        :rtype: :class:`AsyncioGspreadWorksheet`
+        :rtype: :class:`Worksheet`
         """
         if index in self._ws_cache_idx:
             return self._ws_cache_idx[index]
-        ws = await self.agcm._call(self.ss.get_worksheet, index)
+        ws = await self.cm._call(self.ss.get_worksheet, index)
         aws = self._wrap_ws(ws)
         return aws
 
-    async def get_worksheet_by_id(self, id: str | int) -> "AsyncioGspreadWorksheet":
+    async def get_worksheet_by_id(self, id: str | int) -> "Worksheet":
         """Returns a worksheet with specified `worksheet id`.
 
         :param id: The id of a worksheet. it can be seen in the url as the value of the parameter 'gid'.
         :type id: str, int
 
-        :rtype: an instance of :class:`AsyncioGspreadWorksheet`.
+        :rtype: an instance of :class:`Worksheet`.
 
         :raises: :class:`gspread.exceptions.WorksheetNotFound`: if can't find the worksheet
 
         .. versionadded:: 1.5
         """
-        ws = await self.agcm._call(self.ss.get_worksheet_by_id, id)
+        ws = await self.cm._call(self.ss.get_worksheet_by_id, id)
         aws = self._wrap_ws(ws)
         return aws
 
@@ -824,7 +824,7 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ss.list_named_ranges)
+        return await self.cm._call(self.ss.list_named_ranges)
 
     async def list_permissions(self) -> list:
         """List the permissions of a Google Spreadsheet.
@@ -832,7 +832,7 @@ class AsyncioGspreadSpreadsheet:
 
         :returns: The gspread author forgot to document this
         """
-        return await self.agcm._call(self.ss.list_permissions)
+        return await self.cm._call(self.ss.list_permissions)
 
     @_nowait
     async def share(
@@ -870,7 +870,7 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: v3
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ss.share,
             email_address,
             perm_type,
@@ -885,7 +885,7 @@ class AsyncioGspreadSpreadsheet:
         Wraps :meth:`gspread.Spreadsheet.list_protected_ranges`.
 
         :param int sheetid: The worksheet's ID (the ``gid`` value visible in the
-            worksheet's URL, also available as :attr:`AsyncioGspreadWorksheet.id`).
+            worksheet's URL, also available as :attr:`Worksheet.id`).
 
         :returns: A list of the worksheet's protected ranges as dicts
         :rtype: list
@@ -895,7 +895,7 @@ class AsyncioGspreadSpreadsheet:
             gspread 6.x requires the ``sheetid`` argument; protected ranges are
             now listed per-worksheet rather than for the whole spreadsheet.
         """
-        return await self.agcm._call(self.ss.list_protected_ranges, sheetid)
+        return await self.cm._call(self.ss.list_protected_ranges, sheetid)
 
     @property
     def locale(self) -> str:
@@ -918,7 +918,7 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ss.named_range, named_range)
+        return await self.cm._call(self.ss.named_range, named_range)
 
     @_nowait
     async def remove_permissions(self, value: str, role: str = "any"):
@@ -931,7 +931,7 @@ class AsyncioGspreadSpreadsheet:
         :param bool nowait: (optional) If true, return a scheduled future
             instead of waiting for the API call to complete.
         """
-        return await self.agcm._call(self.ss.remove_permissions, value, role=role)
+        return await self.cm._call(self.ss.remove_permissions, value, role=role)
 
     @_nowait
     async def transfer_ownership(self, permission_id: str):
@@ -955,7 +955,7 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: 1.7
         """
-        return await self.agcm._call(self.ss.transfer_ownership, permission_id)
+        return await self.cm._call(self.ss.transfer_ownership, permission_id)
 
     @_nowait
     async def accept_ownership(self, permission_id: str):
@@ -972,17 +972,17 @@ class AsyncioGspreadSpreadsheet:
         :param bool nowait: (optional) If true, return a scheduled future
             instead of waiting for the API call to complete.
         """
-        return await self.agcm._call(self.ss.accept_ownership, permission_id)
+        return await self.cm._call(self.ss.accept_ownership, permission_id)
 
     @_nowait
     async def reorder_worksheets(
-        self, worksheets_in_desired_order: "Iterable[AsyncioGspreadWorksheet]"
+        self, worksheets_in_desired_order: "Iterable[Worksheet]"
     ):
         """Updates the ``index`` property of each Worksheet to reflect
         its index in the provided sequence of Worksheets. Wraps :meth:`gspread.Spreadsheet.reorder_worksheets`.
 
         :param worksheets_in_desired_order: Iterable of Worksheet objects in desired order.
-        :type worksheets_in_desired_order: :class:`~typing.Iterable`\\[:class:`AsyncioGspreadSpreadsheet`\\]
+        :type worksheets_in_desired_order: :class:`~typing.Iterable`\\[:class:`Spreadsheet`\\]
         :param bool nowait: (optional) If true, return a scheduled future instead of
             waiting for the API call to complete.
 
@@ -992,13 +992,13 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ss.reorder_worksheets, (aws.ws for aws in worksheets_in_desired_order)
         )
 
-    async def get_sheet1(self) -> "AsyncioGspreadWorksheet":
+    async def get_sheet1(self) -> "Worksheet":
         """:returns: Shortcut for getting the first worksheet.
-        :rtype: :class:`AsyncioGspreadWorksheet`
+        :rtype: :class:`Worksheet`
         """
         return await self.get_worksheet(0)
 
@@ -1036,7 +1036,7 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ss.update_locale, locale)
+        return await self.cm._call(self.ss.update_locale, locale)
 
     @_nowait
     async def update_timezone(self, timezone: str):
@@ -1050,7 +1050,7 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ss.update_timezone, timezone)
+        return await self.cm._call(self.ss.update_timezone, timezone)
 
     async def update_title(self, title: str):
         """Renames the spreadsheet.
@@ -1061,7 +1061,7 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ss.update_title, title)
+        return await self.cm._call(self.ss.update_title, title)
 
     @property
     def url(self) -> str:
@@ -1079,7 +1079,7 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ss.values_append,
             range,
             params,
@@ -1098,7 +1098,7 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ss.values_batch_get,
             ranges,
             params=params,
@@ -1114,7 +1114,7 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ss.values_clear,
             range,
         )
@@ -1132,7 +1132,7 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: v3
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ss.values_batch_clear,
             params=params,
             body=body,
@@ -1149,7 +1149,7 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ss.values_get, range, params=params)
+        return await self.cm._call(self.ss.values_get, range, params=params)
 
     async def values_update(
         self, range: str, params: dict | None = None, body: dict | None = None
@@ -1177,7 +1177,7 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ss.values_update,
             range,
             params=params,
@@ -1194,9 +1194,9 @@ class AsyncioGspreadSpreadsheet:
 
         .. versionadded:: v3
         """
-        return await self.agcm._call(self.ss.values_batch_update, body=body)
+        return await self.cm._call(self.ss.values_batch_update, body=body)
 
-    async def worksheet(self, title: str) -> "AsyncioGspreadWorksheet":
+    async def worksheet(self, title: str) -> "Worksheet":
         """Gets a worksheet (tab) by title. Wraps
         :meth:`gspread.Spreadsheet.worksheet`.
 
@@ -1204,17 +1204,17 @@ class AsyncioGspreadSpreadsheet:
         the underlying worksheet object.
 
         :param str title: Human-readable title of the worksheet.
-        :rtype: :class:`~gspread_asyncio.AsyncioGspreadWorksheet`
+        :rtype: :class:`~gspread_asyncio.Worksheet`
         """
         if title in self._ws_cache_title:
             return self._ws_cache_title[title]
-        ws = await self.agcm._call(self.ss.worksheet, title)
+        ws = await self.cm._call(self.ss.worksheet, title)
         aws = self._wrap_ws(ws)
         return aws
 
     async def worksheets(
         self, exclude_hidden: bool = False
-    ) -> "list[AsyncioGspreadWorksheet]":
+    ) -> "list[Worksheet]":
         """Gets all worksheets (tabs) in a spreadsheet.
         Wraps :meth:`gspread.Spreadsheet.worksheets`.
 
@@ -1223,9 +1223,9 @@ class AsyncioGspreadSpreadsheet:
 
         :param bool exclude_hidden: (optional) If True, omit hidden worksheets
             from the result. Defaults to False.
-        :rtype: :py:class:`~typing.List`\\[:class:`~gspread_asyncio.AsyncioGspreadWorksheet`\\]
+        :rtype: :py:class:`~typing.List`\\[:class:`~gspread_asyncio.Worksheet`\\]
         """
-        wses = await self.agcm._call(self.ss.worksheets, exclude_hidden=exclude_hidden)
+        wses = await self.cm._call(self.ss.worksheets, exclude_hidden=exclude_hidden)
         awses = []
         for ws in wses:
             aws = self._wrap_ws(ws)
@@ -1233,17 +1233,17 @@ class AsyncioGspreadSpreadsheet:
         return awses
 
 
-class AsyncioGspreadWorksheet:
+class Worksheet:
     """An :mod:`asyncio` wrapper for :class:`gspread.Worksheet`.
     You **must** obtain instances of this class from
-    :meth:`AsyncioGspreadSpreadsheet.add_worksheet`,
-    :meth:`AsyncioGspreadSpreadsheet.get_worksheet`,
-    :meth:`AsyncioGspreadSpreadsheet.worksheet`,
-    or :meth:`AsyncioGspreadSpreadsheet.worksheets`.
+    :meth:`Spreadsheet.add_worksheet`,
+    :meth:`Spreadsheet.get_worksheet`,
+    :meth:`Spreadsheet.worksheet`,
+    or :meth:`Spreadsheet.worksheets`.
     """
 
-    def __init__(self, agcm, ws: gspread.Worksheet):
-        self.agcm = agcm
+    def __init__(self, cm, ws: gspread.Worksheet):
+        self.cm = cm
         self.ws = ws
 
     def __repr__(self):
@@ -1266,7 +1266,7 @@ class AsyncioGspreadWorksheet:
         :type value_render_option: :py:obj:`gspread.utils.ValueRenderOption`
         :rtype: :class:`gspread.Cell`
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.acell, label, value_render_option=value_render_option
         )
 
@@ -1279,7 +1279,7 @@ class AsyncioGspreadWorksheet:
         :param bool nowait: (optional) If true, return a scheduled future
             instead of waiting for the API call to complete.
         """
-        return await self.agcm._call(self.ws.add_cols, cols)
+        return await self.cm._call(self.ws.add_cols, cols)
 
     async def add_dimension_group_columns(self, start: int, end: int):
         """
@@ -1297,7 +1297,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.add_dimension_group_columns, start, end)
+        return await self.cm._call(self.ws.add_dimension_group_columns, start, end)
 
     async def add_dimension_group_rows(self, start: int, end: int):
         """
@@ -1315,7 +1315,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.add_dimension_group_rows, start, end)
+        return await self.cm._call(self.ws.add_dimension_group_rows, start, end)
 
     @_nowait
     async def add_protected_range(
@@ -1353,7 +1353,7 @@ class AsyncioGspreadWorksheet:
             editor_users_emails = []
         if editor_groups_emails is None:
             editor_groups_emails = []
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.add_protected_range,
             name,
             editor_users_emails=editor_users_emails,
@@ -1372,7 +1372,7 @@ class AsyncioGspreadWorksheet:
         :param bool nowait: (optional) If true, return a scheduled future instead
             of waiting for the API call to complete.
         """
-        return await self.agcm._call(self.ws.add_rows, rows)
+        return await self.cm._call(self.ws.add_rows, rows)
 
     @_nowait
     async def append_row(
@@ -1407,7 +1407,7 @@ class AsyncioGspreadWorksheet:
 
         .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.append_row,
             values,
             value_input_option=value_input_option,
@@ -1456,7 +1456,7 @@ class AsyncioGspreadWorksheet:
         .. _InsertDataOption: https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append#InsertDataOption
         """
 
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.append_rows,
             values,
             value_input_option=value_input_option,
@@ -1478,7 +1478,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.5
         """
-        return await self.agcm._call(self.ws.batch_clear, ranges)
+        return await self.cm._call(self.ws.batch_clear, ranges)
 
     @_nowait
     async def batch_format(self, formats: list[dict]):
@@ -1524,7 +1524,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.batch_format, formats)
+        return await self.cm._call(self.ws.batch_format, formats)
 
     async def batch_get(
         self,
@@ -1557,7 +1557,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.1
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.batch_get,
             ranges,
             major_dimension=major_dimension,
@@ -1639,7 +1639,7 @@ class AsyncioGspreadWorksheet:
         .. _ValueRenderOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueRenderOption
         .. _DateTimeRenderOption: https://developers.google.com/sheets/api/reference/rest/v4/DateTimeRenderOption
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.batch_update,
             data,
             raw=raw,
@@ -1668,7 +1668,7 @@ class AsyncioGspreadWorksheet:
 
         .. _ValueRenderOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueRenderOption
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.cell, row, col, value_render_option=value_render_option
         )
 
@@ -1680,7 +1680,7 @@ class AsyncioGspreadWorksheet:
         :param bool nowait: (optional) If true, return a scheduled future instead
             of waiting for the API call to complete.
         """
-        return await self.agcm._call(self.ws.clear)
+        return await self.cm._call(self.ws.clear)
 
     @_nowait
     async def clear_basic_filter(self):
@@ -1691,7 +1691,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.clear_basic_filter)
+        return await self.cm._call(self.ws.clear_basic_filter)
 
     @_nowait
     async def clear_note(self, cell: str):
@@ -1706,7 +1706,7 @@ class AsyncioGspreadWorksheet:
         .. versionadded:: 1.4
         """
 
-        return await self.agcm._call(self.ws.clear_note, cell)
+        return await self.cm._call(self.ws.clear_note, cell)
 
     @property
     def col_count(self) -> int:
@@ -1742,7 +1742,7 @@ class AsyncioGspreadWorksheet:
             `ValueRenderOption`_ in the Sheets API.
         :rtype: :py:class:`~typing.List`\\[:py:class:`~typing.Optional`\\[`str`\\]\\]
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.col_values, col, value_render_option=value_render_option
         )
 
@@ -1759,7 +1759,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.columns_auto_resize, start_column_index, end_column_index
         )
 
@@ -1775,7 +1775,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.copy_to, spreadsheet_id)
+        return await self.cm._call(self.ws.copy_to, spreadsheet_id)
 
     async def copy_range(
         self,
@@ -1808,7 +1808,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.8
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.copy_range,
             source,
             dest,
@@ -1839,7 +1839,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.8
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.cut_range,
             source,
             dest,
@@ -1858,7 +1858,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.define_named_range, name, range_name)
+        return await self.cm._call(self.ws.define_named_range, name, range_name)
 
     @_nowait
     async def delete_columns(self, start_index: int, end_index: int | None = None):
@@ -1873,7 +1873,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.delete_columns, start_index, end_index=end_index
         )
 
@@ -1893,30 +1893,30 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.delete_dimension, dimension, start_index, end_index=end_index
         )
 
     async def delete_named_range(self, named_range_id: str) -> dict:
         """
         :param str named_range_id: The ID of the named range to delete.
-            Can be obtained with :meth:`AsyncioGspreadSpreadsheet.list_named_ranges`.
+            Can be obtained with :meth:`Spreadsheet.list_named_ranges`.
         :param bool nowait: (optional) If true, return a scheduled future instead
             of waiting for the API call to complete.
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.delete_named_range, named_range_id)
+        return await self.cm._call(self.ws.delete_named_range, named_range_id)
 
     async def delete_protected_range(self, id: str) -> dict:
         """Delete protected range identified by the ID ``id``.
 
         :param str id: The ID of the protected range to delete.
-            Can be obtained with :meth:`AsyncioGspreadSpreadsheet.list_protected_ranges`.
+            Can be obtained with :meth:`Spreadsheet.list_protected_ranges`.
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.delete_protected_range, id)
+        return await self.cm._call(self.ws.delete_protected_range, id)
 
     @_nowait
     async def delete_rows(self, index: int, end_index: int | None = None):
@@ -1932,7 +1932,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.2
         """
-        return await self.agcm._call(self.ws.delete_rows, index, end_index=end_index)
+        return await self.cm._call(self.ws.delete_rows, index, end_index=end_index)
 
     async def find(
         self,
@@ -1953,7 +1953,7 @@ class AsyncioGspreadWorksheet:
             Default is True, does not apply to regular expressions.
         :rtype: :class:`gspread.Cell`
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.find,
             query,
             in_row=in_row,
@@ -1979,7 +1979,7 @@ class AsyncioGspreadWorksheet:
             Default is True, does not apply to regular expressions.
         :rtype: :py:class:`~typing.List`\\[:class:`gspread.Cell`\\]
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.findall,
             query,
             in_row=in_row,
@@ -2024,7 +2024,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.format,
             ranges,
             format,
@@ -2038,7 +2038,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.freeze, rows=rows, cols=cols)
+        return await self.cm._call(self.ws.freeze, rows=rows, cols=cols)
 
     @property
     def frozen_row_count(self) -> int:
@@ -2117,7 +2117,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.get,
             range_name,
             major_dimension=major_dimension,
@@ -2175,7 +2175,7 @@ class AsyncioGspreadWorksheet:
         """
         if numericise_ignore is None:
             numericise_ignore = []
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.get_all_records,
             empty2zero=empty2zero,
             head=head,
@@ -2194,7 +2194,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: v3
         """
-        return await self.agcm._call(self.ws.get_all_cells)
+        return await self.cm._call(self.ws.get_all_cells)
 
     async def expand(
         self,
@@ -2217,7 +2217,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: v3
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.expand, top_left_range_name, direction=direction
         )
 
@@ -2230,7 +2230,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.5
         """
-        return await self.agcm._call(self.ws.get_note, cell)
+        return await self.cm._call(self.ws.get_note, cell)
 
     async def get_notes(
         self,
@@ -2252,7 +2252,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: v3
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.get_notes,
             default_empty_value=default_empty_value,
             grid_range=grid_range,
@@ -2277,7 +2277,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded: 1.9
         """
-        return await self.agcm._call(self.ws.update_notes, notes)
+        return await self.cm._call(self.ws.update_notes, notes)
 
     async def get_values(
         self,
@@ -2351,7 +2351,7 @@ class AsyncioGspreadWorksheet:
 
         .. _ValueRenderOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueRenderOption
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.get_values,
             range_name,
             major_dimension=major_dimension,
@@ -2368,7 +2368,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.hide)
+        return await self.cm._call(self.ws.hide)
 
     async def hide_columns(self, start: int, end: int):
         """
@@ -2381,7 +2381,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.hide_columns, start, end)
+        return await self.cm._call(self.ws.hide_columns, start, end)
 
     async def hide_rows(self, start: int, end: int):
         """
@@ -2394,7 +2394,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.hide_rows, start, end)
+        return await self.cm._call(self.ws.hide_rows, start, end)
 
     @property
     def id(self) -> int:
@@ -2449,7 +2449,7 @@ class AsyncioGspreadWorksheet:
         .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
         .. versionadded:: 1.4
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.insert_cols,
             values,
             col=col,
@@ -2469,7 +2469,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.4
         """
-        return await self.agcm._call(self.ws.insert_note, cell, content)
+        return await self.cm._call(self.ws.insert_note, cell, content)
 
     @_nowait
     async def insert_notes(self, notes: dict):
@@ -2491,7 +2491,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.9
         """
-        return await self.agcm._call(self.ws.insert_notes, notes)
+        return await self.cm._call(self.ws.insert_notes, notes)
 
     @_nowait
     async def clear_notes(self, ranges: list[str]):
@@ -2502,7 +2502,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.9
         """
-        return await self.agcm._call(self.ws.clear_notes, ranges)
+        return await self.cm._call(self.ws.clear_notes, ranges)
 
     @_nowait
     async def insert_row(
@@ -2541,7 +2541,7 @@ class AsyncioGspreadWorksheet:
 
         .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.insert_row,
             values,
             index=index,
@@ -2584,7 +2584,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.1
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.insert_rows,
             values,
             row=row,
@@ -2602,7 +2602,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.list_dimension_group_columns)
+        return await self.cm._call(self.ws.list_dimension_group_columns)
 
     async def list_dimension_group_rows(self) -> list[dict]:
         """
@@ -2613,7 +2613,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.list_dimension_group_rows)
+        return await self.cm._call(self.ws.list_dimension_group_rows)
 
     async def delete_dimension_group_columns(self, start: int, end: int):
         """Remove the grouping of a set of columns. Wraps
@@ -2624,7 +2624,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: v3
         """
-        return await self.agcm._call(self.ws.delete_dimension_group_columns, start, end)
+        return await self.cm._call(self.ws.delete_dimension_group_columns, start, end)
 
     async def delete_dimension_group_rows(self, start: int, end: int):
         """Remove the grouping of a set of rows. Wraps
@@ -2635,7 +2635,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: v3
         """
-        return await self.agcm._call(self.ws.delete_dimension_group_rows, start, end)
+        return await self.cm._call(self.ws.delete_dimension_group_rows, start, end)
 
     async def merge_cells(self, name: str, merge_type: str = "MERGE_ALL"):
         """Merge cells. There are 3 merge types: ``MERGE_ALL``, ``MERGE_COLUMNS``,
@@ -2653,7 +2653,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.merge_cells, name, merge_type=merge_type)
+        return await self.cm._call(self.ws.merge_cells, name, merge_type=merge_type)
 
     async def batch_merge(
         self,
@@ -2683,7 +2683,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: v3
         """
-        return await self.agcm._call(self.ws.batch_merge, merges, merge_type=merge_type)
+        return await self.cm._call(self.ws.batch_merge, merges, merge_type=merge_type)
 
     async def range(self, *args, **kwargs) -> list[gspread.Cell]:
         """Returns a list of :class:`~gspread.Cell` objects from a specified
@@ -2700,7 +2700,7 @@ class AsyncioGspreadWorksheet:
             (``range(first_row, first_col, last_row, last_col)``); pass an A1 or
             named range string instead.
         """
-        return await self.agcm._call(self.ws.range, *args, **kwargs)
+        return await self.cm._call(self.ws.range, *args, **kwargs)
 
     @_nowait
     async def resize(self, rows: int | None = None, cols: int | None = None):
@@ -2712,7 +2712,7 @@ class AsyncioGspreadWorksheet:
         :param bool nowait: (optional) If true, return a scheduled future instead of
             waiting for the API call to complete.
         """
-        return await self.agcm._call(self.ws.resize, rows=rows, cols=cols)
+        return await self.cm._call(self.ws.resize, rows=rows, cols=cols)
 
     @property
     def row_count(self) -> int:
@@ -2744,7 +2744,7 @@ class AsyncioGspreadWorksheet:
 
         .. _ValueRenderOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueRenderOption
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.row_values,
             row,
             major_dimension=major_dimension,
@@ -2762,7 +2762,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.rows_auto_resize, start_row_index, end_row_index
         )
 
@@ -2775,7 +2775,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.set_basic_filter, name=name)
+        return await self.cm._call(self.ws.set_basic_filter, name=name)
 
     async def add_validation(
         self,
@@ -2815,7 +2815,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: v3
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.add_validation,
             range,
             condition_type,
@@ -2830,21 +2830,21 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.show)
+        return await self.cm._call(self.ws.show)
 
     async def hide_gridlines(self):
         """Hide gridlines on the current worksheet
 
         .. versionadded:: 1.9
         """
-        return await self.agcm._call(self.ws.hide_gridlines)
+        return await self.cm._call(self.ws.hide_gridlines)
 
     async def show_gridlines(self):
         """Show gridlines on the current worksheet
 
         .. versionadded:: 1.9
         """
-        return await self.agcm._call(self.ws.show_gridlines)
+        return await self.cm._call(self.ws.show_gridlines)
 
     async def sort(self, specs: list[tuple[int, str]], range: str | None = None):
         """Sorts worksheet using given sort orders.
@@ -2866,7 +2866,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.sort, *specs, range=range)
+        return await self.cm._call(self.ws.sort, *specs, range=range)
 
     @property
     def title(self) -> str:
@@ -2886,7 +2886,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.unhide_columns, start, end)
+        return await self.cm._call(self.ws.unhide_columns, start, end)
 
     async def unhide_rows(self, start: int, end: int):
         """
@@ -2899,7 +2899,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.unhide_rows, start, end)
+        return await self.cm._call(self.ws.unhide_rows, start, end)
 
     async def unmerge_cells(self, name: str):
         """Unmerge cells.
@@ -2913,7 +2913,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.unmerge_cells, name)
+        return await self.cm._call(self.ws.unmerge_cells, name)
 
     @_nowait
     async def update(
@@ -2956,7 +2956,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.5
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.update,
             values,
             range_name=range_name,
@@ -2992,7 +2992,7 @@ class AsyncioGspreadWorksheet:
         :param bool nowait: (optional) If true, return a scheduled future
             instead of waiting for the API call to complete.
         """
-        return await self.agcm._call(self.ws.update_cell, row, col, value)
+        return await self.cm._call(self.ws.update_cell, row, col, value)
 
     @_nowait
     async def update_cells(
@@ -3012,7 +3012,7 @@ class AsyncioGspreadWorksheet:
 
         .. _ValueInputOption: https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption
         """
-        return await self.agcm._call(
+        return await self.cm._call(
             self.ws.update_cells, cell_list, value_input_option=value_input_option
         )
 
@@ -3024,11 +3024,11 @@ class AsyncioGspreadWorksheet:
         for information on how updating the index property affects the order of worksheets
         in a spreadsheet.
 
-        To reorder all worksheets in a spreadsheet, see `AsyncioGspreadSpreadsheet.reorder_worksheets`.
+        To reorder all worksheets in a spreadsheet, see `Spreadsheet.reorder_worksheets`.
 
         .. versionadded:: 1.6
         """
-        return await self.agcm._call(self.ws.update_index, index)
+        return await self.cm._call(self.ws.update_index, index)
 
     @_nowait
     async def update_note(self, cell: str, content: str) -> None:
@@ -3040,7 +3040,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: 1.4
         """
-        return await self.agcm._call(self.ws.update_note, cell, content)
+        return await self.cm._call(self.ws.update_note, cell, content)
 
     async def update_title(self, title):
         raise NotImplementedError("This breaks ws caching, could be implemented later")
@@ -3057,7 +3057,7 @@ class AsyncioGspreadWorksheet:
             gspread 6.x takes a hex color string here instead of a dict of RGB
             values between 0 and 1.
         """
-        return await self.agcm._call(self.ws.update_tab_color, color)
+        return await self.cm._call(self.ws.update_tab_color, color)
 
     async def get_tab_color(self) -> str | None:
         """Get the worksheet's tab color, or :obj:`None` if it has no
@@ -3067,7 +3067,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: v3
         """
-        return await self.agcm._call(self.ws.get_tab_color)
+        return await self.cm._call(self.ws.get_tab_color)
 
     @_nowait
     async def clear_tab_color(self):
@@ -3079,7 +3079,7 @@ class AsyncioGspreadWorksheet:
 
         .. versionadded:: v3
         """
-        return await self.agcm._call(self.ws.clear_tab_color)
+        return await self.cm._call(self.ws.clear_tab_color)
 
     @property
     def url(self) -> str:
@@ -3091,9 +3091,20 @@ class AsyncioGspreadWorksheet:
         return self.ws.url
 
 
+# Backwards-compatible aliases for the old class names.
+AsyncioGspreadClientManager = ClientManager
+AsyncioGspreadClient = Client
+AsyncioGspreadSpreadsheet = Spreadsheet
+AsyncioGspreadWorksheet = Worksheet
+
+
 __all__ = [
     "AsyncioGspreadClient",
     "AsyncioGspreadClientManager",
     "AsyncioGspreadSpreadsheet",
     "AsyncioGspreadWorksheet",
+    "Client",
+    "ClientManager",
+    "Spreadsheet",
+    "Worksheet",
 ]

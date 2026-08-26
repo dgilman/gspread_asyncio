@@ -40,24 +40,24 @@ def get_creds():
     ])
     return scoped
 
-# Create an AsyncioGspreadClientManager object which
+# Create a ClientManager object which
 # will give us access to the Spreadsheet API.
 
-agcm = gspread_asyncio.AsyncioGspreadClientManager(get_creds)
+cm = gspread_asyncio.ClientManager(get_creds)
 
 # Here's an example of how you use the API:
 
-async def example(agcm):
+async def example(cm):
     # Always authorize first.
     # If you have a long-running program call authorize() repeatedly.
-    agc = await agcm.authorize()
+    c = await cm.authorize()
 
-    ss = await agc.create("Test Spreadsheet")
+    ss = await c.create("Test Spreadsheet")
     print("Spreadsheet URL: https://docs.google.com/spreadsheets/d/{0}".format(ss.id))
     print("Open the URL in your browser to see gspread_asyncio in action!")
 
     # Allow anyone with the URL to write to this spreadsheet.
-    await agc.insert_permission(ss.id, None, perm_type="anyone", role="writer")
+    await c.insert_permission(ss.id, None, perm_type="anyone", role="writer")
 
     # Create a new spreadsheet but also grab a reference to the default one.
     ws = await ss.add_worksheet("My Test Worksheet", 10, 5)
@@ -72,14 +72,14 @@ async def example(agcm):
     print("All done!")
 
 # Turn on debugging if you're new to asyncio!
-asyncio.run(example(agcm), debug=True)
+asyncio.run(example(cm), debug=True)
 ```
 
 ## Observational notes and gotchas
 
 * This module does not define its own exceptions, it propagates instances of `gspread.exceptions.GSpreadException`.
-* Always call `AsyncioGspreadClientManager.authorize()`, `AsyncioGspreadClient.open_*()` and `AsyncioGspreadSpreadsheet.get_worksheet()` before doing any work on a spreadsheet. These methods keep an internal cache so it is painless to call them many times, even inside of a loop. This makes sure you always have a valid set of authentication credentials from Google.
-* The only object you should store in your application is the `AsyncioGspreadClientManager` (`agcm`).
+* Always call `ClientManager.authorize()`, `Client.open_*()` and `Spreadsheet.get_worksheet()` before doing any work on a spreadsheet. These methods keep an internal cache so it is painless to call them many times, even inside of a loop. This makes sure you always have a valid set of authentication credentials from Google.
+* The only object you should store in your application is the `ClientManager` (`cm`).
 * Right now the `gspread` library does not support bulk appends of rows or bulk changes of cells. When this is done `gspread_asyncio` will support batching of these Google API calls without any changes to the Python `gspread_asyncio` API.
 * I came up with the default 1.1 second delay between API calls (the `gspread_delay` kwarg) after extensive experimentation. The official API rate limit is one call every second but however Google measures these things introduces a tiny bit of jitter that will get you rate blocked if you ride that limit exactly.
 * Google's service reliability on these endpoints is surprisingly bad. There are frequent HTTP 500s and the retry logic will save your butt in long-running scripts or short, one-shot, one-off ones.

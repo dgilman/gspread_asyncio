@@ -9,27 +9,27 @@ Exceptions
 ----------
 The :mod:`gspread_asyncio` module does not have any exceptions of its own, it instead propagates exceptions thrown from within :mod:`gspread` calls. These are all derived from a base class :exc:`gspread.exceptions.GSpreadException` and it is recommended that you catch and handle these errors.
 
-Socket, network and rate limiting exceptions are handled by :mod:`gspread_asyncio` internally. The defaults are sensible but you can subclass several methods of :mod:`~gspread_asyncio.AsyncioGspreadClientManager` if you need to customize that behavior.
+Socket, network and rate limiting exceptions are handled by :mod:`gspread_asyncio` internally. The defaults are sensible but you can subclass several methods of :mod:`~gspread_asyncio.ClientManager` if you need to customize that behavior.
 
 
-AsyncioGspreadClientManager
----------------------------
-.. autoclass:: AsyncioGspreadClientManager
+ClientManager
+-------------
+.. autoclass:: ClientManager
    :members:
 
-AsyncioGspreadClient
---------------------
-.. autoclass:: AsyncioGspreadClient
+Client
+------
+.. autoclass:: Client
    :members:
 
-AsyncioGspreadSpreadsheet
--------------------------
-.. autoclass:: AsyncioGspreadSpreadsheet
+Spreadsheet
+-----------
+.. autoclass:: Spreadsheet
    :members:
 
-AsyncioGspreadWorksheet
------------------------
-.. autoclass:: AsyncioGspreadWorksheet
+Worksheet
+---------
+.. autoclass:: Worksheet
    :members:
 
 

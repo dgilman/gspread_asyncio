@@ -44,23 +44,23 @@ class Smoketest(unittest.TestCase):
     """Not a real unit test - let's just get some coverage that the thing works ok."""
 
     async def _test_smoke(self, creds_fn):
-        agcm = gspread_asyncio.AsyncioGspreadClientManager(creds_fn, gspread_delay=3.1)
+        cm = gspread_asyncio.ClientManager(creds_fn, gspread_delay=3.1)
 
-        agc = await agcm.authorize()
-        self.assertIsInstance(agc, gspread_asyncio.AsyncioGspreadClient)
+        c = await cm.authorize()
+        self.assertIsInstance(c, gspread_asyncio.Client)
 
-        ss = await agc.create("Smoketest Spreadsheet")
+        ss = await c.create("Smoketest Spreadsheet")
         print(f"Spreadsheet URL: https://docs.google.com/spreadsheets/d/{ss.id}")
-        self.assertIsInstance(ss, gspread_asyncio.AsyncioGspreadSpreadsheet)
-        self.assertEqual(1, len(agc._ss_cache_key))
-        self.assertEqual(1, len(agc._ss_cache_title))
-        self.assertEqual(ss, agc._ss_cache_key[ss.id])
-        self.assertEqual(ss, agc._ss_cache_title[ss.title])
+        self.assertIsInstance(ss, gspread_asyncio.Spreadsheet)
+        self.assertEqual(1, len(c._ss_cache_key))
+        self.assertEqual(1, len(c._ss_cache_title))
+        self.assertEqual(ss, c._ss_cache_key[ss.id])
+        self.assertEqual(ss, c._ss_cache_title[ss.title])
 
-        await agc.insert_permission(ss.id, None, perm_type="anyone", role="writer")
+        await c.insert_permission(ss.id, None, perm_type="anyone", role="writer")
 
         ws = await ss.add_worksheet("My Test Worksheet", 2, 2)
-        self.assertIsInstance(ws, gspread_asyncio.AsyncioGspreadWorksheet)
+        self.assertIsInstance(ws, gspread_asyncio.Worksheet)
         self.assertEqual(1, len(ss._ws_cache_idx))
         self.assertEqual(1, len(ss._ws_cache_title))
         self.assertEqual(ws, ss._ws_cache_idx[1])
@@ -135,10 +135,10 @@ class Smoketest(unittest.TestCase):
         self.assertEqual(0, len(ss._ws_cache_title))
 
         ss_id = ss.ss.id
-        await agc.del_spreadsheet(ss_id)
+        await c.del_spreadsheet(ss_id)
 
-        self.assertEqual(0, len(agc._ss_cache_key))
-        self.assertEqual(0, len(agc._ss_cache_title))
+        self.assertEqual(0, len(c._ss_cache_key))
+        self.assertEqual(0, len(c._ss_cache_title))
 
     @async_test
     async def test_smoke(self):
