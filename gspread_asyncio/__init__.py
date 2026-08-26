@@ -4,10 +4,9 @@ import logging
 import time
 from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
-import requests
-
 import gspread
 from gspread.utils import a1_to_rowcol, extract_id_from_url
+import requests
 
 # Copyright 2018-2026 David Gilman
 # Licensed under the MIT license. See LICENSE for details.
@@ -501,7 +500,7 @@ class AsyncioGspreadClient(object):
 
     async def login(self):
         raise NotImplemented(
-            "Use AsyncioGspreadClientManager.authorize()" "to create a gspread client"
+            "Use AsyncioGspreadClientManager.authorize() to create a gspread client"
         )
 
     async def open(

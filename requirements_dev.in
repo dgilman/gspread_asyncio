@@ -1,4 +1,3 @@
-black
-isort
+ruff
 pip-tools
 oauth2client

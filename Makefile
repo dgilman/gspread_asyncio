@@ -26,11 +26,11 @@ decrypt-test-files:
 test:
 	. tests/.env && python -m unittest tests.integration
 
-BLACK_FILES=*.py gspread_asyncio/*.py tests/*.py docs/*.py
+FORMAT_FILES=*.py gspread_asyncio/*.py tests/*.py docs/*.py
 format:
-	black $(BLACK_FILES)
-	isort $(BLACK_FILES)
+	ruff check --select I --fix $(FORMAT_FILES)
+	ruff format $(FORMAT_FILES)
 
 format-check:
-	black --check $(BLACK_FILES)
-	isort --check $(BLACK_FILES)
+	ruff check --select I $(FORMAT_FILES)
+	ruff format --check $(FORMAT_FILES)
