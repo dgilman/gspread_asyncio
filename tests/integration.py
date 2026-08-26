@@ -114,6 +114,19 @@ class Smoketest(unittest.TestCase):
         self.assertEqual(1, ws.frozen_row_count)
         self.assertEqual(1, ws.frozen_col_count)
 
+        # list_protected_ranges now requires the worksheet's id (gspread 6.x).
+        # add_protected_range with the default (None -> []) editor lists must not
+        # send a null editors payload.
+        self.assertEqual([], await ss.list_protected_ranges(ws.id))
+        await ws.add_protected_range("A1:B2", description="protected")
+        protected = await ss.list_protected_ranges(ws.id)
+        self.assertEqual(1, len(protected))
+        self.assertEqual("protected", protected[0]["description"])
+
+        # update_tab_color takes a hex string in gspread 6.x, not an RGB dict.
+        await ws.update_tab_color("#112233")
+        self.assertEqual("#112233", await ws.get_tab_color())
+
         ws_del = await ss.add_worksheet("Throwaway Worksheet", 1, 1)
         del_id = ws_del.id
         self.assertIn("Throwaway Worksheet", ss._ws_cache_title)
