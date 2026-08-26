@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=docs/requirements.txt docs/requirements.in
 #
-alabaster==0.7.16
+alabaster==1.0.0
     # via sphinx
 babel==2.18.0
     # via sphinx
@@ -16,7 +16,7 @@ charset-normalizer==3.5.1
     # via requests
 cryptography==50.0.1
     # via google-auth
-docutils==0.20.1
+docutils==0.22.4
     # via
     #   m2r2
     #   sphinx
@@ -34,7 +34,7 @@ imagesize==2.0.1
     # via sphinx
 jinja2==3.1.6
     # via sphinx
-m2r2==0.3.3.post2
+m2r2==0.3.4
     # via -r docs/requirements.in
 markupsafe==3.0.3
     # via jinja2
@@ -58,9 +58,11 @@ requests==2.34.2
     #   sphinx
 requests-oauthlib==2.0.0
     # via google-auth-oauthlib
+roman-numerals==4.1.0
+    # via sphinx
 snowballstemmer==3.1.1
     # via sphinx
-sphinx==7.2.6
+sphinx==9.1.0
     # via
     #   -r docs/requirements.in
     #   sphinxcontrib-trio
@@ -76,7 +78,7 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-sphinxcontrib-trio==1.1.2
+sphinxcontrib-trio==1.2.0
     # via -r docs/requirements.in
 urllib3==2.7.0
     # via requests

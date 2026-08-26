@@ -1,4 +1,4 @@
-Sphinx==7.2.*
-m2r2==0.3.3.post2
-sphinxcontrib-trio==1.1.2
+Sphinx==9.1.*
+m2r2==0.3.4
+sphinxcontrib-trio==1.2.*
 gspread==6.2.*
