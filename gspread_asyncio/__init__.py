@@ -356,9 +356,7 @@ class Client:
         ass = self._wrap_ss(ss)
         return ass
 
-    async def create(
-        self, title: str, folder_id: str | None = None
-    ) -> "Spreadsheet":
+    async def create(self, title: str, folder_id: str | None = None) -> "Spreadsheet":
         """Create a new Google Spreadsheet. Wraps
         :meth:`gspread.Client.create`.
 
@@ -498,9 +496,7 @@ class Client:
             "Use ClientManager.authorize() to create a gspread client"
         )
 
-    async def open(
-        self, title: str, folder_id: str | None = None
-    ) -> "Spreadsheet":
+    async def open(self, title: str, folder_id: str | None = None) -> "Spreadsheet":
         """Opens a Google Spreadsheet by title. Wraps
         :meth:`gspread.Client.open`.
 
@@ -549,9 +545,7 @@ class Client:
         ss_id = extract_id_from_url(url)
         return await self.open_by_key(ss_id)
 
-    async def openall(
-        self, title: str | None = None
-    ) -> "list[Spreadsheet]":
+    async def openall(self, title: str | None = None) -> "list[Spreadsheet]":
         """Open all available spreadsheets. Wraps
         :meth:`gspread.Client.openall`.
 
@@ -619,9 +613,7 @@ class Spreadsheet:
         :param int index: (optional) Position of the sheet
         :rtype: :py:class:`~gspread_asyncio.Worksheet`
         """
-        ws = await self.cm._call(
-            self.ss.add_worksheet, title, rows, cols, index=index
-        )
+        ws = await self.cm._call(self.ss.add_worksheet, title, rows, cols, index=index)
         aws = self._wrap_ws(ws)
         return aws
 
@@ -1212,9 +1204,7 @@ class Spreadsheet:
         aws = self._wrap_ws(ws)
         return aws
 
-    async def worksheets(
-        self, exclude_hidden: bool = False
-    ) -> "list[Worksheet]":
+    async def worksheets(self, exclude_hidden: bool = False) -> "list[Worksheet]":
         """Gets all worksheets (tabs) in a spreadsheet.
         Wraps :meth:`gspread.Spreadsheet.worksheets`.
 
