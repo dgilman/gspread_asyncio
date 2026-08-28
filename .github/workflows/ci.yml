@@ -40,7 +40,7 @@ jobs:
       - name: install deps
         run: make test-install
       - name: install age
-        run: wget https://github.com/FiloSottile/age/releases/download/v1.3.1/age-v1.3.1-linux-amd64.tar.gz && tar xf age-v1.3.1-linux-amd64.tar.gz
+        run: curl -sSLO https://github.com/FiloSottile/age/releases/download/v1.3.1/age-v1.3.1-linux-amd64.tar.gz && tar xf age-v1.3.1-linux-amd64.tar.gz
       - name: decrypt keys
         env:
           AGE_KEY: ${{ secrets.AGE_KEY }}
