@@ -137,6 +137,40 @@ class RetryTest(unittest.TestCase):
         self.assertEqual(cm.requests_errors, [])
 
     @async_test
+    async def test_retryable_refresh_error_is_retried(self):
+        """google-auth sets retryable when the token endpoint answered with a
+        5xx or a temporarily_unavailable style OAuth error. That is a transient
+        fault on Google's side, not a bad credential."""
+        cm = CountingClientManager()
+        errors = [
+            google.auth.exceptions.RefreshError(
+                "temporarily_unavailable", retryable=True
+            )
+            for _ in range(2)
+        ]
+        method = Flaky(errors)
+
+        rval = await cm._call(method)
+
+        self.assertEqual(rval, "ok")
+        self.assertEqual(method.call_count, 3)
+        self.assertEqual(len(cm.requests_errors), 2)
+        for e in cm.requests_errors:
+            self.assertIsInstance(e, google.auth.exceptions.RefreshError)
+            self.assertTrue(e.retryable)
+
+    @async_test
+    async def test_retryable_refresh_error_releases_the_call_lock(self):
+        cm = CountingClientManager()
+        method = Flaky(
+            [google.auth.exceptions.RefreshError("server_error", retryable=True)]
+        )
+
+        await cm._call(method)
+
+        self.assertFalse(cm.call_lock.locked())
+
+    @async_test
     async def test_call_lock_is_released_after_a_fatal_error(self):
         cm = CountingClientManager()
         method = Flaky([api_error(403)])

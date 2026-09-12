@@ -139,6 +139,10 @@ class ClientManager:
                 if 400 <= code <= 499 and code != 429:
                     raise
                 await self.handle_gspread_error(e, method, args, kwargs)
+            except google.auth.exceptions.RefreshError as e:
+                if not e.retryable:
+                    raise
+                await self.handle_requests_error(e, method, args, kwargs)
             except (
                 requests.RequestException,
                 google.auth.exceptions.TransportError,
@@ -199,8 +203,9 @@ class ClientManager:
 
     async def handle_requests_error(self, e, method, args, kwargs):
         """Called in the exception handler for a
-        :class:`requests.RequestException` or a
-        :class:`google.auth.exceptions.TransportError`. Optionally subclass to
+        :class:`requests.RequestException`, a
+        :class:`google.auth.exceptions.TransportError`, or a retryable
+        :class:`google.auth.exceptions.RefreshError`. Optionally subclass to
         implement custom error handling, error logging, rate limiting, backoff,
         or jitter.
 
@@ -217,15 +222,28 @@ class ClientManager:
         lazy. The error is a :class:`~requests.RequestException` that google-auth
         caught and re-raised; the original is available at ``e.__cause__``.
 
+        google-auth throws a :class:`~google.auth.exceptions.RefreshError` when
+        it cannot get a new OAuth token. This method is only called for the ones
+        that have ``e.retryable`` set, which google-auth does when the token
+        endpoint answered with a 5xx or a ``temporarily_unavailable`` style
+        OAuth error. google-auth has already retried those three times with
+        backoff of its own by the time it raises. Every other
+        :class:`~google.auth.exceptions.RefreshError` means the credentials are
+        bad; ``_call`` re-raises those because no amount of retrying fixes a
+        misconfiguration.
+
         :param e: Exception object thrown by gspread or by google-auth
-        :type e: :class:`~requests.RequestException` or
-            :class:`~google.auth.exceptions.TransportError`
+        :type e: :class:`~requests.RequestException`,
+            :class:`~google.auth.exceptions.TransportError` or
+            :class:`~google.auth.exceptions.RefreshError`
         :param method: gspread class method called
         :param args: positional arguments for the gspread class method
         :param kwargs: keyword arguments for the gspread class method
 
         .. versionchanged:: v4.0.0
-            Also called for :class:`google.auth.exceptions.TransportError`.
+            Also called for :class:`google.auth.exceptions.TransportError` and
+            for a :class:`google.auth.exceptions.RefreshError` with
+            ``retryable`` set.
         """
         # By default, retry forever.
         logger.error(
