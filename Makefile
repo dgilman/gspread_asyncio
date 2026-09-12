@@ -22,8 +22,12 @@ decrypt-test-files:
 	echo "$(AGE_KEY)" > tests/age_key.txt
 	./age/age --decrypt -i tests/age_key.txt -o tests/creds.json tests/creds.json.age
 
+# The unit tests need no credentials and no network.
+unit-test:
+	python -m unittest tests.unit
+
 # You can use this to run the tests locally
-test:
+test: unit-test
 	. tests/.env && python -m unittest tests.integration
 
 FORMAT_FILES=*.py gspread_asyncio/*.py tests/*.py docs/*.py

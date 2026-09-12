@@ -5,6 +5,7 @@ import logging
 import time
 from typing import TYPE_CHECKING
 
+import google.auth.exceptions
 import gspread
 from gspread.utils import a1_to_rowcol, extract_id_from_url
 import requests
@@ -138,7 +139,10 @@ class ClientManager:
                 if 400 <= code <= 499 and code != 429:
                     raise
                 await self.handle_gspread_error(e, method, args, kwargs)
-            except requests.RequestException as e:
+            except (
+                requests.RequestException,
+                google.auth.exceptions.TransportError,
+            ) as e:
                 await self.handle_requests_error(e, method, args, kwargs)
             finally:
                 self.call_lock.release()
@@ -195,8 +199,10 @@ class ClientManager:
 
     async def handle_requests_error(self, e, method, args, kwargs):
         """Called in the exception handler for a
-        :class:`requests.RequestException`. Optionally subclass to implement
-        custom error handling, error logging, rate limiting, backoff, or jitter.
+        :class:`requests.RequestException` or a
+        :class:`google.auth.exceptions.TransportError`. Optionally subclass to
+        implement custom error handling, error logging, rate limiting, backoff,
+        or jitter.
 
         The default implementation logs the error and sleeps for
         ``gspread_delay`` seconds. It does not throw an exception of its own
@@ -205,11 +211,21 @@ class ClientManager:
         gspread throws a :class:`~requests.RequestException` when a socket layer
         error occurs.
 
-        :param e: Exception object thrown by gspread
-        :type e: :class:`~requests.RequestException`
+        google-auth throws a :class:`~google.auth.exceptions.TransportError`
+        when a socket layer error occurs while it refreshes an OAuth token.
+        This can happen inside any gspread method call because the refresh is
+        lazy. The error is a :class:`~requests.RequestException` that google-auth
+        caught and re-raised; the original is available at ``e.__cause__``.
+
+        :param e: Exception object thrown by gspread or by google-auth
+        :type e: :class:`~requests.RequestException` or
+            :class:`~google.auth.exceptions.TransportError`
         :param method: gspread class method called
         :param args: positional arguments for the gspread class method
         :param kwargs: keyword arguments for the gspread class method
+
+        .. versionchanged:: v4.0.0
+            Also called for :class:`google.auth.exceptions.TransportError`.
         """
         # By default, retry forever.
         logger.error(
