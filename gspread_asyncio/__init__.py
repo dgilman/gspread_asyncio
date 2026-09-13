@@ -40,6 +40,21 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+_RETRYABLE_DRIVE_REASONS = frozenset({"rateLimitExceeded", "userRateLimitExceeded"})
+
+
+def _is_retryable_drive_error(e: gspread.exceptions.APIError) -> bool:
+    # A few of our APIs are actually Google Drive API and we have to parse
+    # their error state out of a differently shaped error response, documented here
+    # https://developers.google.com/workspace/drive/api/guides/handle-errors
+    errors = e.error.get("errors")
+    if not isinstance(errors, Iterable) or isinstance(errors, (str, bytes)):
+        return False
+    return any(
+        isinstance(err, dict) and err.get("reason") in _RETRYABLE_DRIVE_REASONS
+        for err in errors
+    )
+
 
 def _nowait(f):
     @functools.wraps(f)
@@ -136,7 +151,11 @@ class ClientManager:
                 # HTTP 400 range codes are errors that the caller should handle.
                 # 429, however, is the rate limiting.
                 # Catch it here, because we have handling and want to retry that one anyway.
-                if 400 <= code <= 499 and code != 429:
+                if (
+                    400 <= code <= 499
+                    and code != 429
+                    and not _is_retryable_drive_error(e)
+                ):
                     raise
                 await self.handle_gspread_error(e, method, args, kwargs)
             except google.auth.exceptions.RefreshError as e:
@@ -181,10 +200,11 @@ class ClientManager:
         ``e.response``.
 
         Note that the internal ``_call`` method which invokes this method
-        will not do so for any HTTP 400 statuses. These are errors that arise
-        from mistaken usage of the Google API and are fatal. The exception is
-        status code 429, the rate limiting status, to let this code handle
-        client-side rate limiting.
+        will not do so for any HTTP 400 statuses. Those are errors that arise
+        from mistaken usage of the Google API and are fatal. The exceptions
+        passed to this function are 429s and your implementation here is
+        meant to handle rate limiting. In the rare cases where we call
+        Google Drive APIs you may see a 403 here when rate limited.
 
         :param e: Exception object thrown by gspread
         :type e: :class:`~gspread.exceptions.APIError`

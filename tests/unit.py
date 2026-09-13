@@ -23,6 +23,23 @@ def api_error(status_code):
     return gspread.exceptions.APIError(response)
 
 
+def drive_api_error(status_code, reason):
+    """The Drive API answers with the legacy Google JSON error shape, which
+    carries a machine readable reason that the Sheets API does not send."""
+    response = mock.Mock(spec=requests.Response)
+    response.status_code = status_code
+    response.json.return_value = {
+        "error": {
+            "code": status_code,
+            "message": "nope",
+            "errors": [
+                {"domain": "usageLimits", "reason": reason, "message": "nope"},
+            ],
+        }
+    }
+    return gspread.exceptions.APIError(response)
+
+
 class CountingClientManager(gspread_asyncio.ClientManager):
     """Records handler calls and does not sleep between retries."""
 
@@ -122,6 +139,56 @@ class RetryTest(unittest.TestCase):
 
         self.assertEqual(method.call_count, 1)
         self.assertEqual(cm.gspread_errors, [])
+
+    @async_test
+    async def test_drive_rate_limit_is_retried(self):
+        """The Drive API signals rate limiting with a 403, not a 429."""
+        for reason in ("rateLimitExceeded", "userRateLimitExceeded"):
+            with self.subTest(reason=reason):
+                cm = CountingClientManager()
+                method = Flaky([drive_api_error(403, reason)])
+
+                rval = await cm._call(method)
+
+                self.assertEqual(rval, "ok")
+                self.assertEqual(method.call_count, 2)
+                self.assertEqual(len(cm.gspread_errors), 1)
+
+    @async_test
+    async def test_other_drive_403_is_fatal(self):
+        """Every other Drive 403 is a quota, policy or permission error that no
+        amount of retrying fixes."""
+        for reason in (
+            "sharingRateLimitExceeded",
+            "dailyLimitExceeded",
+            "storageQuotaExceeded",
+            "insufficientFilePermissions",
+        ):
+            with self.subTest(reason=reason):
+                cm = CountingClientManager()
+                method = Flaky([drive_api_error(403, reason)])
+
+                with self.assertRaises(gspread.exceptions.APIError):
+                    await cm._call(method)
+
+                self.assertEqual(method.call_count, 1)
+                self.assertEqual(cm.gspread_errors, [])
+
+    @async_test
+    async def test_unparseable_error_body_is_fatal(self):
+        """gspread synthesizes an error dict with no errors key when the
+        response body is not JSON. The reason check must not throw over it."""
+        response = mock.Mock(spec=requests.Response)
+        response.status_code = 403
+        response.json.side_effect = ValueError("not json")
+        response.text = "<html>go away</html>"
+        cm = CountingClientManager()
+        method = Flaky([gspread.exceptions.APIError(response)])
+
+        with self.assertRaises(gspread.exceptions.APIError):
+            await cm._call(method)
+
+        self.assertEqual(method.call_count, 1)
 
     @async_test
     async def test_refresh_error_is_fatal(self):
